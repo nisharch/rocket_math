@@ -7,429 +7,237 @@ class DecimalsBasicLearnScreen extends StatefulWidget {
   State<DecimalsBasicLearnScreen> createState() => _DecimalsBasicLearnScreenState();
 }
 
-class _DecimalsBasicLearnScreenState extends State<DecimalsBasicLearnScreen> {
+class _DecimalsBasicLearnScreenState extends State<DecimalsBasicLearnScreen> with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 3, vsync: this);
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.teal.shade50,
+      backgroundColor: Colors.amber.shade50,
       appBar: AppBar(
-        title: const Text("🔢 Decimals Station"),
+        title: const Text("🔢 Decimal Station", style: TextStyle(fontWeight: FontWeight.w900, fontSize: 18)),
         backgroundColor: Colors.teal.shade700,
         foregroundColor: Colors.white,
-        elevation: 4,
+        elevation: 2,
+        bottom: TabBar(
+          controller: _tabController,
+          indicatorColor: Colors.white,
+          labelColor: Colors.white,
+          unselectedLabelColor: Colors.white70,
+          labelStyle: const TextStyle(fontWeight: FontWeight.w900, fontSize: 13),
+          tabs: const [
+            Tab(text: "🔴 Splitter"),
+            Tab(text: "🟧 Grid Map"),
+            Tab(text: "🚀 Decoder"),
+          ],
+        ),
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(20),
+      body: TabBarView(
+        controller: _tabController,
         children: [
-          // Cartoon Mascot Guide
-          _buildHeaderMascot(),
-          const SizedBox(height: 20),
-
-          // 1. What is a Decimal?
-          AnimatedLearnCard(
-            title: "1. What is a Decimal Point? 🎯",
-            content: "A decimal point (.) is a magical dot used to separate whole numbers from parts of a number (fractions)!\n\n"
-                "Anything to the LEFT of the dot is a Whole Number.\n"
-                "Anything to the RIGHT of the dot is a Fraction Part.",
-            bgColor: Colors.white,
+          _buildToyboxMission(
+            title: "What is a Decimal Point? 🔴",
+            summary: "A decimal point (.) is a magical dot separating whole numbers from smaller fractional parts.",
+            tip: "💡 Robo-Tip: Left of the dot is the 'Whole Number', right of the dot is the 'Fraction Part'!",
             borderColor: Colors.teal.shade700,
-            bottomChild: _buildDecimalSplitDiagram(),
+            child: const InteractiveDecimalSplitter(),
           ),
-
-          // 2. Tenths and Hundredths Visualized
-          AnimatedLearnCard(
-            title: "2. Tenths & Hundredths! 🟧",
-            content: "Let's count the columns to understand parts:\n"
-                "• 1 Tenth (0.1) = 1 out of 10 equal parts.\n"
-                "• 1 Hundredth (0.01) = 1 out of 100 equal parts.",
-            bgColor: Colors.blue.shade50,
+          _buildToyboxMission(
+            title: "Tenths & Hundredths! 🟧",
+            summary: "Understand parts by looking at how a whole block is divided into 10 or 100 tiny pieces.",
+            tip: "💡 Robo-Tip: 1 Tenth (0.1) is 1/10th, while 1 Hundredth (0.01) is 1/100th of the block!",
             borderColor: Colors.blueAccent,
-            bottomChild: _buildTenthsGridDiagram(),
+            child: const InteractiveTenthsGrid(),
           ),
-
-          // 3. Decimal Place Value Chart
-          AnimatedLearnCard(
-            title: "3. Decimal Place Value Chart 🗺️",
-            content: "As you move right from the decimal point, the value gets smaller and smaller! Look at how we place the parts:",
-            bgColor: Colors.orange.shade50,
-            borderColor: Colors.orange.shade800,
-            bottomChild: _buildPlaceValueTable(),
-          ),
-
-          // 4. Reading & Writing Decimals Step-by-Step
-          AnimatedLearnCard(
-            title: "4. Mission: Reading Decimals! 🚀",
-            content: "Mission Target: Let's learn how to read and write the number 14.35 correctly!",
-            bgColor: Colors.purple.shade50,
+          _buildToyboxMission(
+            title: "Mission: Reading Decimals! 🚀",
+            summary: "Master the art of reading decimals aloud step-by-step without getting tripped up!",
+            tip: "💡 Robo-Tip: Read the whole number, say 'point', then read digits on the right one-by-one!",
             borderColor: Colors.purple,
-            bottomChild: _buildReadingDecimalsTrack(),
+            child: const InteractiveDecimalDecoder(),
           ),
-
-          // 5. Mini Practice Challenge
-          AnimatedLearnCard(
-            title: "5. Try it Yourself! 📝",
-            content: "Q1. Write 5 tenths as a decimal.\n"
-                "Answer: 5/10 = 0.5\n\n"
-                "Q2. Write 7 hundredths as a decimal.\n"
-                "Answer: 7/100 = 0.07\n\n"
-                "Q3. Read out loud: 8.42\n"
-                "Answer: Eight point four two! (Never say forty-two!)",
-            bgColor: Colors.green.shade50,
-            borderColor: Colors.green.shade700,
-          ),
-
-          const SizedBox(height: 30),
         ],
       ),
     );
   }
 
-  // Cartoon Robot Mascot Widget
-  Widget _buildHeaderMascot() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(25),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.teal.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          )
-        ],
-        border: Border.all(color: Colors.teal.withOpacity(0.2), width: 2),
-      ),
-      child: Row(
-        children: [
-          const Text("🤖", style: TextStyle(fontSize: 50)),
-          const SizedBox(width: 15),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  "Decimal Orbit! 🔢",
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.teal.shade800,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                const Text(
-                  "Let's break whole numbers into micro-fractions with the magic dot!",
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: Colors.black54,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
+  Widget _buildToyboxMission({
+    required String title,
+    required String summary,
+    required String tip,
+    required Color borderColor,
+    required Widget child,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: borderColor, width: 3),
+          boxShadow: [
+            BoxShadow(
+              color: borderColor.withOpacity(0.08),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            )
+          ],
+        ),
+        child: Column(
+          children: [
+            Text(title, style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: borderColor), textAlign: TextAlign.center),
+            const SizedBox(height: 4),
+            Text(summary, style: const TextStyle(fontSize: 12, color: Colors.black54, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
+            Expanded(child: Center(child: child)),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(color: borderColor.withOpacity(0.05), borderRadius: BorderRadius.circular(16), border: Border.all(color: borderColor.withOpacity(0.2), width: 1.5)),
+              child: Text(tip, style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: borderColor, height: 1.3), textAlign: TextAlign.center),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
+}
 
-  // Splitting diagram highlighting Left vs Right parts of a decimal number
-  Widget _buildDecimalSplitDiagram() {
-    return Container(
-      margin: const EdgeInsets.only(top: 12),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.teal.shade50.withOpacity(0.4),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.teal.withOpacity(0.2)),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          _buildSplitBadge("Whole Part\n( 25 )", Colors.blue),
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 8),
-            child: Text("🔴\nDot", textAlign: TextAlign.center, style: TextStyle(fontWeight: FontWeight.bold, color: Colors.red, fontSize: 14)),
-          ),
-          _buildSplitBadge("Decimal Part\n( 7 )", Colors.orange),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSplitBadge(String label, Color color) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-      decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(12), border: Border.all(color: color.withOpacity(0.3))),
-      child: Text(label, textAlign: TextAlign.center, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: color)),
-    );
-  }
-
-  // Shaded fractional blocks showing 4 tenths shaded (4/10 = 0.4)
-  Widget _buildTenthsGridDiagram() {
-    return Container(
-      margin: const EdgeInsets.only(top: 12),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.blueAccent.withOpacity(0.2)),
-      ),
-      child: Column(
-        children: [
-          const Text("Visual Model: 4 Tenths (0.4)", style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.blueAccent)),
-          const SizedBox(height: 10),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: List.generate(
-              10,
-              (index) => Container(
-                width: 22,
-                height: 40,
-                // FIXED: Moved background color and border assignment inside a common BoxDecoration
-                decoration: BoxDecoration(
-                  color: index < 4 ? Colors.blue.shade300 : Colors.blue.shade50.withOpacity(0.2),
-                  border: Border.all(color: Colors.blueAccent, width: 0.5),
-                ),
-                child: Center(
-                  child: Text(
-                    index < 4 ? "⭐" : "",
-                    style: const TextStyle(fontSize: 10),
-                  ),
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: 8),
-          const Text("4 Blocks Shaded out of 10 = 4/10 = 0.4", style: TextStyle(fontSize: 11, color: Colors.black54, fontWeight: FontWeight.bold)),
-        ],
-      ),
-    );
-  }
-
-  // Place Value block chart grid
-  Widget _buildPlaceValueTable() {
-    return Container(
-      margin: const EdgeInsets.only(top: 12),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.orange.withOpacity(0.2)),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          _buildPlaceValueColumn("Tens", "1", Colors.black54),
-          _buildPlaceValueColumn("Ones", "4", Colors.black54),
-          _buildPlaceValueColumn("DOT", ".", Colors.red),
-          _buildPlaceValueColumn("Tenths\n(1/10)", "3", Colors.orange.shade700),
-          _buildPlaceValueColumn("Hundredths\n(1/100)", "5", Colors.orange.shade700),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPlaceValueColumn(String heading, String digit, Color valueColor) {
+// --- TAB 1: INTERACTIVE DECIMAL SPLITTER ---
+class InteractiveDecimalSplitter extends StatelessWidget {
+  const InteractiveDecimalSplitter({super.key});
+  @override
+  Widget build(BuildContext context) {
     return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
-        Text(heading, textAlign: TextAlign.center, style: const TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: Colors.black38)),
-        const SizedBox(height: 6),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-          decoration: BoxDecoration(
-            color: digit == "." ? Colors.transparent : Colors.grey.shade100,
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Text(
-            digit,
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: valueColor),
-          ),
-        )
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            _buildBadge("Whole Part (25)", Colors.blue),
+            const Padding(padding: EdgeInsets.symmetric(horizontal: 8), child: Text("🔴", style: TextStyle(fontSize: 20))),
+            _buildBadge("Decimal Part (7)", Colors.orange.shade800),
+          ],
+        ),
+        const SizedBox(height: 16),
+        const Text("25 . 7", style: TextStyle(fontSize: 40, fontWeight: FontWeight.w900, color: Colors.teal)),
       ],
     );
   }
 
-  // Gamified step tracking design for decoding decimals rules
-  Widget _buildReadingDecimalsTrack() {
+  Widget _buildBadge(String text, Color color) {
     return Container(
-      margin: const EdgeInsets.only(top: 15),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.purple.withOpacity(0.15)),
-      ),
-      child: Column(
-        children: [
-          _buildTrackNode(
-            stepNum: "1",
-            stepTitle: "Read the Whole Number first 🟢",
-            description: "Look at '14' ➡️ Read as 'Fourteen'",
-            themeColor: Colors.green.shade600,
-          ),
-          _buildTrackDivider(),
-          _buildTrackNode(
-            stepNum: "2",
-            stepTitle: "Say the Dot out loud 🔴",
-            description: "Say the word 'Point' explicitly",
-            themeColor: Colors.red.shade600,
-          ),
-          _buildTrackDivider(),
-          _buildTrackNode(
-            stepNum: "3",
-            stepTitle: "Read right digits SEPARATELY 🔵",
-            description: "Look at '35' ➡️ Read as 'Three Five' (Not thirty-five)",
-            themeColor: Colors.blue.shade600,
-          ),
-          _buildTrackDivider(),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: Colors.purple.shade50,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.purple.withOpacity(0.2)),
-            ),
-            child: const Text(
-              "🗣️ Speak it together: 'Fourteen point three five'",
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.purple),
-            ),
-          )
-        ],
-      ),
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(12), border: Border.all(color: color.withOpacity(0.3))),
+      child: Text(text, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11, color: color)),
     );
   }
+}
 
-  Widget _buildTrackNode({
-    required String stepNum,
-    required String stepTitle,
-    required String description,
-    required Color themeColor,
-  }) {
-    return Row(
+// --- TAB 2: TENTHS GRID VISUALIZER ---
+class InteractiveTenthsGrid extends StatefulWidget {
+  const InteractiveTenthsGrid({super.key});
+  @override
+  State<InteractiveTenthsGrid> createState() => _InteractiveTenthsGridState();
+}
+
+class _InteractiveTenthsGridState extends State<InteractiveTenthsGrid> {
+  int shaded = 4;
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
-        CircleAvatar(
-          radius: 11,
-          backgroundColor: themeColor,
-          child: Text(stepNum, style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: List.generate(10, (i) => Container(
+            width: 22, height: 40,
+            decoration: BoxDecoration(color: i < shaded ? Colors.blue.shade300 : Colors.blue.shade50.withOpacity(0.5), border: Border.all(color: Colors.blueAccent, width: 0.5)),
+          )),
         ),
-        const SizedBox(width: 12),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        const SizedBox(height: 12),
+        Text("Shaded: $shaded/10 = 0.$shaded", style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 14)),
+        Slider(value: shaded.toDouble(), min: 0, max: 10, divisions: 10, onChanged: (v) => setState(() => shaded = v.toInt())),
+      ],
+    );
+  }
+}
+
+// --- TAB 3: DECODER ENGINE ---
+class InteractiveDecimalDecoder extends StatefulWidget {
+  const InteractiveDecimalDecoder({super.key});
+  @override
+  State<InteractiveDecimalDecoder> createState() => _InteractiveDecimalDecoderState();
+}
+
+class _InteractiveDecimalDecoderState extends State<InteractiveDecimalDecoder> {
+  int step = 0; 
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+          decoration: BoxDecoration(color: Colors.purple.shade50, borderRadius: BorderRadius.circular(20), border: Border.all(color: Colors.purple.shade200, width: 2)),
+          child: Text(
+            step == 0 ? "14 . 358" : step == 1 ? "14" : step == 2 ? "14 . " : step == 3 ? "14 . 3" : step == 4 ? "14 . 35" : "14 . 358",
+            style: const TextStyle(fontSize: 48, fontWeight: FontWeight.w900, color: Colors.purple, letterSpacing: 2),
+          ),
+        ),
+        const SizedBox(height: 20),
+        Container(
+          padding: const EdgeInsets.all(16),
+          width: double.infinity,
+          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: Colors.black12)),
+          child: Text(
+            step == 0 ? "Tap the Scanner Buttons below to decode 14.358!" :
+            step == 1 ? "14: The WHOLE NUMBER (Fourteen)." :
+            step == 2 ? "Point: The divider that separates whole from fractional parts." :
+            step == 3 ? "3: Sits in the TENTHS room (3/10)." : 
+            step == 4 ? "5: Sits in the HUNDREDTHS room (5/100)." : "8: Sits in the THOUSANDTHS room (8/1000).",
+            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.black54),
+            textAlign: TextAlign.center,
+          ),
+        ),
+        const SizedBox(height: 20),
+        Wrap(
+          spacing: 10,
+          runSpacing: 10,
+          alignment: WrapAlignment.center,
           children: [
-            Text(stepTitle, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: themeColor)),
-            Text(description, style: const TextStyle(fontSize: 12, color: Colors.black54, fontWeight: FontWeight.w500)),
+            _buildBtn("Whole", step == 1, () => setState(() => step = 1)),
+            _buildBtn("Point", step == 2, () => setState(() => step = 2)),
+            _buildBtn("Tenths", step == 3, () => setState(() => step = 3)),
+            _buildBtn("H-ths", step == 4, () => setState(() => step = 4)),
+            _buildBtn("Th-ths", step == 5, () => setState(() => step = 5)),
           ],
         )
       ],
     );
   }
 
-  Widget _buildTrackDivider() {
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: Container(
-        margin: const EdgeInsets.only(left: 9, top: 4, bottom: 4),
-        height: 14,
-        width: 2,
-        color: Colors.purple.withOpacity(0.2),
-      ),
-    );
-  }
-}
-
-// Hover Responsive Animated Learn Card Widget
-class AnimatedLearnCard extends StatefulWidget {
-  final String title;
-  final String content;
-  final Color bgColor;
-  final Color borderColor;
-  final Widget? bottomChild;
-
-  const AnimatedLearnCard({
-    super.key,
-    required this.title,
-    required this.content,
-    required this.bgColor,
-    required this.borderColor,
-    this.bottomChild,
-  });
-
-  @override
-  State<AnimatedLearnCard> createState() => _AnimatedLearnCardState();
-}
-
-class _AnimatedLearnCardState extends State<AnimatedLearnCard> {
-  bool _isHovered = false;
-  bool _isPressed = false;
-
-  @override
-  Widget build(BuildContext context) {
-    double transformY = _isPressed ? 2.0 : (_isHovered ? -6.0 : 0.0);
-    double scale = _isPressed ? 0.98 : (_isHovered ? 1.02 : 1.0);
-
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      onEnter: (_) => setState(() => _isHovered = true),
-      onExit: (_) => setState(() {
-        _isHovered = false;
-        _isPressed = false;
-      }),
-      child: GestureDetector(
-        onTapDown: (_) => setState(() => _isPressed = true),
-        onTapUp: (_) => setState(() => _isPressed = false),
-        onTapCancel: () => setState(() => _isPressed = false),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          curve: Curves.easeOutCubic,
-          margin: const EdgeInsets.only(bottom: 20),
-          padding: const EdgeInsets.all(18),
-          transform: Matrix4.identity()..translate(0.0, transformY)..scale(scale),
-          decoration: BoxDecoration(
-            color: widget.bgColor,
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(
-              color: _isHovered ? widget.borderColor : widget.borderColor.withOpacity(0.4), 
-              width: _isHovered ? 3 : 2,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: widget.borderColor.withOpacity(_isHovered ? 0.2 : 0.06),
-                blurRadius: _isHovered ? 14.0 : 4.0,
-                offset: Offset(0, _isHovered ? 6.0 : 2.0),
-              ),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      widget.title, 
-                      style: TextStyle(fontSize: 19, fontWeight: FontWeight.bold, color: widget.borderColor),
-                    ),
-                  ),
-                  AnimatedOpacity(
-                    duration: const Duration(milliseconds: 200),
-                    opacity: _isHovered ? 1.0 : 0.3,
-                    child: Text("⭐", style: TextStyle(fontSize: _isHovered ? 21 : 16)),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 6),
-              Text(
-                widget.content, 
-                style: const TextStyle(fontSize: 15, height: 1.4, color: Colors.black87, fontWeight: FontWeight.w500),
-              ),
-              if (widget.bottomChild != null) widget.bottomChild!,
-            ],
-          ),
-        ),
-      ),
-    );
-  }
+  Widget _buildBtn(String t, bool a, VoidCallback o) => ElevatedButton(
+    style: ElevatedButton.styleFrom(
+      backgroundColor: a ? Colors.purple : Colors.white, 
+      foregroundColor: a ? Colors.white : Colors.purple,
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+    ), 
+    onPressed: o, 
+    child: Text(t, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w900))
+  );
 }

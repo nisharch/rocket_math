@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "881316631246",
+    "project_id": "mojar-gonit-4f18a",
+    "storage_bucket": "mojar-gonit-4f18a.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:881316631246:android:155ef356829d9cb72f369f",
+        "android_client_info": {
+          "package_name": "com.example.rocket_math"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "881316631246-04pdr44943o6nep196pq91hjtubph6km.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.rocket_math",
+            "certificate_hash": "ace59764711b2194cd76b26fd886f9f31ea5e9ae"
+          }
+        },
+        {
+          "client_id": "881316631246-gk4etjm2sembm60j82e0vocgncs5588s.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBs2za-MV3yCqYyW6ADlRja7FcnMCV4M_U"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "881316631246-gk4etjm2sembm60j82e0vocgncs5588s.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "881316631246-dnvgas2jcmb7efl7cvleg3qf6k3ujulh.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.rocketMath"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

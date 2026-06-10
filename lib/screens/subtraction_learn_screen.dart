@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 
 class SubtractionLearnScreen extends StatefulWidget {
@@ -8,327 +7,359 @@ class SubtractionLearnScreen extends StatefulWidget {
   State<SubtractionLearnScreen> createState() => _SubtractionLearnScreenState();
 }
 
-class _SubtractionLearnScreenState extends State<SubtractionLearnScreen> {
-  // ২ নম্বর সেকশনের ম্যাঙ্গো মাঞ্চার গেমের জন্য ভেরিয়েবল
+class _SubtractionLearnScreenState extends State<SubtractionLearnScreen> with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+
+  // Mango Muncher Game State
   int totalMangoes = 5;
   int eatenMangoes = 0;
 
   @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 4, vsync: this);
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.red.shade50,
+      backgroundColor: Colors.amber.shade50, // Warm play-school background
       appBar: AppBar(
-        title: const Text("➖ Subtraction Lab"),
+        title: const Text("➖ Subtraction Lab", style: TextStyle(fontWeight: FontWeight.w900, fontSize: 18)),
         backgroundColor: Colors.redAccent,
         foregroundColor: Colors.white,
-        elevation: 4,
+        elevation: 2,
+        bottom: TabBar(
+          controller: _tabController,
+          indicatorColor: Colors.white,
+          labelColor: Colors.white,
+          unselectedLabelColor: Colors.white70,
+          isScrollable: true,
+          labelStyle: const TextStyle(fontWeight: FontWeight.w900, fontSize: 13),
+          tabs: const [
+            Tab(text: "🎒 Step 1"),
+            Tab(text: "🥭 Step 2"),
+            Tab(text: "👣 Step 3"),
+            Tab(text: "⚡ Step 4"),
+          ],
+        ),
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(20),
+      body: TabBarView(
+        controller: _tabController,
         children: [
-          // কার্টুন রোবট গাইড মাসকট
-          _buildHeaderMascot(),
-          const SizedBox(height: 20),
-
-          // ১. সাবট্র্যাকশন পরিচিতি (What is Subtraction)
-          _buildLearnCard(
-            title: "1. What is Subtraction? 🤔",
-            content: "Subtraction means TAKING AWAY! 🎒\n"
-                     "When we remove things from a group, we do subtraction. "
-                     "We use Minus (−) sign, and the leftover is called Difference! 🌟",
-            bgColor: Colors.orange.shade50,
+          _buildToyboxMission(
+            title: "Taking Things Away! 🎒",
+            child: _buildIntroStarsDiagram(),
             borderColor: Colors.orange,
-            childWidget: _buildIntroStarsDiagram(),
           ),
-
-          // ২. ইন্টারেক্টিভ আম খাওয়ার গেম সেকশন (Mango Muncher)
-          _buildLearnCard(
-            title: "2. The Mango Muncher! 🥭",
-            content: "Click 'Eat One' to eat a mango and subtract it! Click 'Undo' to get it back!",
-            bgColor: Colors.yellow.shade50,
-            borderColor: Colors.amber,
-            childWidget: _buildMangoMuncherGame(),
+          _buildToyboxMission(
+            title: "The Mango Muncher! 🥭",
+            child: _buildMangoMuncherGame(),
+            borderColor: Colors.amber.shade800,
           ),
-
-          // ৩. কীভাবে সাধারণ বিয়োগ করতে হয় (Normal Subtraction)
-          _buildLearnCard(
-            title: "3. How to Subtract? 👣",
-            content: "Let's do 35 − 12. Always start from the friendly ONES side first!",
-            bgColor: Colors.green.shade50,
+          _buildToyboxMission(
+            title: "Column Subtract Steps! 👣",
+            child: const InteractiveNormalSubGrid(),
             borderColor: Colors.green,
-            childWidget: _buildNormalSubDiagram(),
           ),
-
-          // ৪. ক্যারি ওভার বা ধার করার বিয়োগ (Borrowing)
-          _buildLearnCard(
-            title: "4. The Carry Over Magic! ⚡",
-            content: "Let's do 42 − 17. Since 2 is smaller than 7, borrow 1 Ten from the neighbor house!",
-            bgColor: Colors.purple.shade50,
-            borderColor: Colors.purple,
-            childWidget: _buildBorrowSubDiagram(),
+          _buildToyboxMission(
+            title: "The Borrowing Magic Engine! ⚡",
+            child: const InteractiveBorrowMachine(),
+            borderColor: Colors.purpleAccent,
           ),
-          
-          const SizedBox(height: 20),
         ],
       ),
     );
   }
 
-  // কার্টুন রোবট গাইড মাসকট
-  Widget _buildHeaderMascot() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(25),
-        boxShadow: [BoxShadow(color: Colors.red.withOpacity(0.1), blurRadius: 10, offset: const Offset(0, 4))],
-        border: Border.all(color: Colors.redAccent.withOpacity(0.2), width: 2),
-      ),
-      child: Row(
-        children: [
-          const Text("🤖", style: TextStyle(fontSize: 45)),
-          const SizedBox(width: 15),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: const [
-                Text("Robo-Math Subtraction! ⚡", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.redAccent)),
-                SizedBox(height: 2),
-                Text("Let's do some funny takeaway missions!", style: TextStyle(fontSize: 13, color: Colors.black54, fontWeight: FontWeight.w600)),
-              ],
+  Widget _buildToyboxMission({required String title, required Widget child, required Color borderColor}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: borderColor, width: 3), // Cartoon border
+          boxShadow: [
+            BoxShadow(
+              color: borderColor.withOpacity(0.08),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            )
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              title,
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: borderColor),
             ),
-          ),
-        ],
+            const SizedBox(height: 20),
+            Expanded(
+              child: Center(
+                child: SingleChildScrollView(child: child),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  // বেস কার্ড উইজেট যা হোভার ও টাচ অ্যানিমেশন সাপোর্ট করে
-  Widget _buildLearnCard({required String title, required String content, required Color bgColor, required Color borderColor, required Widget childWidget}) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 20),
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: bgColor,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: borderColor.withOpacity(0.4), width: 2),
-        boxShadow: [
-          BoxShadow(color: borderColor.withOpacity(0.06), blurRadius: 8, offset: const Offset(0, 4)),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(title, style: TextStyle(fontSize: 19, fontWeight: FontWeight.bold, color: borderColor)),
-          const SizedBox(height: 6),
-          Text(content, style: const TextStyle(fontSize: 15, height: 1.4, color: Colors.black87, fontWeight: FontWeight.w500)),
-          childWidget,
-        ],
-      ),
-    );
-  }
-
-  // ১ নম্বর কার্ডের স্টার ডায়াগ্রাম
+  // --- MODULE 1: VISUAL INTRODUCTION ---
   Widget _buildIntroStarsDiagram() {
-    return Container(
-      margin: const EdgeInsets.only(top: 12),
-      padding: const EdgeInsets.all(10),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(15)),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: const [
-          Text("⭐⭐⭐⭐⭐", style: TextStyle(fontSize: 16)),
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: 6),
-            child: Text("−", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.orange)),
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Text("⭐⭐⭐⭐⭐", style: TextStyle(fontSize: 22)),
+            Container(
+              margin: const EdgeInsets.symmetric(horizontal: 10),
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(color: Colors.orange.shade100, shape: BoxShape.circle),
+              child: const Text("−", style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: Colors.orange)),
+            ),
+            const Text("⭐⭐", style: TextStyle(fontSize: 22)),
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 8),
+              child: Text("=", style: TextStyle(fontSize: 22, color: Colors.black26, fontWeight: FontWeight.bold)),
+            ),
+            const Text("⭐⭐⭐", style: TextStyle(fontSize: 22)),
+          ],
+        ),
+        const SizedBox(height: 20),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+          decoration: BoxDecoration(color: Colors.orange.shade50, borderRadius: BorderRadius.circular(12)),
+          child: const Text(
+            "5 − 2 = 3 Leftovers!",
+            style: TextStyle(color: Colors.orange, fontWeight: FontWeight.w900, fontSize: 15),
           ),
-          Text("⭐⭐", style: TextStyle(fontSize: 16)),
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: 6),
-            child: Text("=", style: TextStyle(fontSize: 18, color: Colors.black38)),
-          ),
-          Text("⭐⭐⭐", style: TextStyle(fontSize: 16)),
-        ],
-      ),
+        )
+      ],
     );
   }
 
-  // ২ নম্বর সেকশনের ইন্টারেক্টিভ আম খাওয়ার গেম (Mango Muncher)
+  // --- MODULE 2: MANGO MUNCHER GAME MECHANIC ---
   Widget _buildMangoMuncherGame() {
     int currentMangoes = totalMangoes - eatenMangoes;
-    return Container(
-      margin: const EdgeInsets.only(top: 12),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(18)),
-      child: Column(
-        children: [
-          // আমের ডিসপ্লে
-          AnimatedSwitcher(
-            duration: const Duration(milliseconds: 300),
-            child: Text(
-              currentMangoes > 0 ? "🥭" * currentMangoes : "Empty Basket! 🧺",
-              key: ValueKey<int>(currentMangoes),
-              style: const TextStyle(fontSize: 28),
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        AnimatedSwitcher(
+          duration: const Duration(milliseconds: 250),
+          child: Text(
+            currentMangoes > 0 ? "🥭" * currentMangoes : "Empty Basket! 🧺",
+            key: ValueKey<int>(currentMangoes),
+            style: const TextStyle(fontSize: 28),
+          ),
+        ),
+        const SizedBox(height: 20),
+        Text(
+          "$totalMangoes − $eatenMangoes = $currentMangoes",
+          style: TextStyle(fontSize: 26, fontWeight: FontWeight.w900, color: Colors.amber.shade900),
+        ),
+        const SizedBox(height: 24),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.amber.shade600,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              onPressed: eatenMangoes < totalMangoes ? () => setState(() => eatenMangoes++) : null,
+              child: const Text("Eat One 🍽️", style: TextStyle(fontWeight: FontWeight.w900)),
             ),
-          ),
-          const SizedBox(height: 10),
-          // ডাইনামিক গেম স্কোর টেক্সট
-          Text(
-            "$totalMangoes − $eatenMangoes = $currentMangoes",
-            style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: Colors.orangeAccent),
-          ),
-          const SizedBox(height: 12),
-          // গেম বাটন কন্ট্রোল
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              ElevatedButton.styleFrom(
-                backgroundColor: Colors.amber,
+            const SizedBox(width: 12),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green.shade600,
+                foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              ).buildElevatedButton(
-                onPressed: eatenMangoes < totalMangoes
-                    ? () => setState(() => eatenMangoes++)
-                    : null,
-                child: const Text("Eat One 🍽️", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
               ),
-              const SizedBox(width: 12),
-              ElevatedButton.styleFrom(
-                backgroundColor: Colors.green,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              ).buildElevatedButton(
-                onPressed: eatenMangoes > 0
-                    ? () => setState(() => eatenMangoes--)
-                    : null,
-                child: const Text("Undo 🔄", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-              ),
-            ],
-          )
-        ],
-      ),
-    );
-  }
-
-  // ৩ নম্বর কার্ডের সাধারণ বিয়োগের ডায়াগ্রাম (35 - 12 = 23)
-  Widget _buildNormalSubDiagram() {
-    return Container(
-      margin: const EdgeInsets.only(top: 12),
-      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
-      child: Column(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: const [
-              SizedBox(width: 30),
-              Text("T", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.redAccent)),
-              SizedBox(width: 40),
-              Text("O", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.teal)),
-            ],
-          ),
-          const Divider(height: 6, thickness: 1),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: const [
-              SizedBox(width: 30),
-              Text("3", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-              SizedBox(width: 40),
-              Text("5", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            ],
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: const [
-              Text("−", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.green)),
-              SizedBox(width: 15),
-              Text("1", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-              SizedBox(width: 40),
-              Text("2", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            ],
-          ),
-          Container(margin: const EdgeInsets.symmetric(vertical: 4), height: 2, width: 110, color: Colors.black87),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: const [
-              SizedBox(width: 30),
-              Text("2", style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: Colors.green)),
-              SizedBox(width: 40),
-              Text("3", style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: Colors.green)),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ৪ নম্বর কার্ডের জন্য ক্যারি/ধার করার বিয়োগের ডায়াগ্রাম (42 - 17 = 25)
-  Widget _buildBorrowSubDiagram() {
-    return Container(
-      margin: const EdgeInsets.only(top: 12),
-      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
-      child: Column(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const SizedBox(width: 25),
-              Text("(3)", style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.purple.shade300)),
-              const SizedBox(width: 30),
-              Text("(12)", style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.purple.shade300)),
-            ],
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: const [
-              SizedBox(width: 30),
-              Text("T", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.redAccent)),
-              SizedBox(width: 40),
-              Text("O", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.teal)),
-            ],
-          ),
-          const Divider(height: 6, thickness: 1),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: const [
-              SizedBox(width: 30),
-              Text("4", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, decoration: TextDecoration.lineThrough, decorationColor: Colors.red)),
-              SizedBox(width: 40),
-              Text("2", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, decoration: TextDecoration.lineThrough, decorationColor: Colors.red)),
-            ],
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: const [
-              Text("−", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.purple)),
-              SizedBox(width: 15),
-              Text("1", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-              SizedBox(width: 40),
-              Text("7", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            ],
-          ),
-          Container(margin: const EdgeInsets.symmetric(vertical: 4), height: 2, width: 110, color: Colors.black87),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: const [
-              SizedBox(width: 30),
-              Text("2", style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: Colors.purple)),
-              SizedBox(width: 40),
-              Text("5", style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: Colors.purple)),
-            ],
-          ),
-        ],
-      ),
+              onPressed: eatenMangoes > 0 ? () => setState(() => eatenMangoes--) : null,
+              child: const Text("Undo 🔄", style: TextStyle(fontWeight: FontWeight.w900)),
+            ),
+          ],
+        )
+      ],
     );
   }
 }
 
-// ElevatedButton এর জন্য এক্সটেনশন মেথড (কোড ক্লিন রাখার জন্য)
-extension on ButtonStyle {
-  Widget buildElevatedButton({required VoidCallback? onPressed, required Widget child}) {
-    return ElevatedButton(
-      style: this,
-      onPressed: onPressed,
-      child: child,
+// --- MODULE 3: INTERACTIVE NORMAL GRID NAVIGATION ---
+class InteractiveNormalSubGrid extends StatefulWidget {
+  const InteractiveNormalSubGrid({super.key});
+
+  @override
+  State<InteractiveNormalSubGrid> createState() => _InteractiveNormalSubGridState();
+}
+
+class _InteractiveNormalSubGridState extends State<InteractiveNormalSubGrid> {
+  int activeStep = 0; // 0: clear, 1: ones, 2: tens
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const SizedBox(width: 30),
+            Text("T", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: activeStep == 2 ? Colors.green : Colors.grey.shade300)),
+            const SizedBox(width: 35),
+            Text("O", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: activeStep == 1 ? Colors.green : Colors.grey.shade300)),
+          ],
+        ),
+        const SizedBox(height: 4),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const SizedBox(width: 30),
+            Text("3", style: TextStyle(fontSize: 26, fontWeight: FontWeight.w900, color: activeStep == 2 ? Colors.green : Colors.black87)),
+            const SizedBox(width: 30),
+            Text("5", style: TextStyle(fontSize: 26, fontWeight: FontWeight.w900, color: activeStep == 1 ? Colors.green : Colors.black87)),
+          ],
+        ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Text("−", style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: Colors.green)),
+            const SizedBox(width: 45),
+            Text("1", style: TextStyle(fontSize: 26, fontWeight: FontWeight.w900, color: activeStep == 2 ? Colors.green : Colors.black87)),
+            const SizedBox(width: 30),
+            Text("2", style: TextStyle(fontSize: 26, fontWeight: FontWeight.w900, color: activeStep == 1 ? Colors.green : Colors.black87)),
+          ],
+        ),
+        Container(margin: const EdgeInsets.symmetric(vertical: 6), height: 3, width: 120, color: Colors.black26),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const SizedBox(width: 30),
+            Text(activeStep == 2 ? "2" : "?", style: TextStyle(fontSize: 28, fontWeight: FontWeight.w900, color: activeStep == 2 ? Colors.green : Colors.grey.shade300)),
+            const SizedBox(width: 30),
+            Text(activeStep >= 1 ? "3" : "?", style: TextStyle(fontSize: 28, fontWeight: FontWeight.w900, color: activeStep == 1 ? Colors.green : (activeStep == 2 ? Colors.black87 : Colors.grey.shade300))),
+          ],
+        ),
+        const SizedBox(height: 24),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: activeStep == 1 ? Colors.green : Colors.grey.shade200,
+                foregroundColor: activeStep == 1 ? Colors.white : Colors.black87,
+              ),
+              onPressed: () => setState(() => activeStep = 1),
+              child: const Text("1. Ones (5−2)", style: TextStyle(fontWeight: FontWeight.w900, fontSize: 12)),
+            ),
+            const SizedBox(width: 8),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: activeStep == 2 ? Colors.green : Colors.grey.shade200,
+                foregroundColor: activeStep == 2 ? Colors.white : Colors.black87,
+              ),
+              onPressed: activeStep >= 1 ? () => setState(() => activeStep = 2) : null,
+              child: const Text("2. Tens (3−1)", style: TextStyle(fontWeight: FontWeight.w900, fontSize: 12)),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+// --- MODULE 4: INTERACTIVE BORROW MACHINE ---
+class InteractiveBorrowMachine extends StatefulWidget {
+  const InteractiveBorrowMachine({super.key});
+
+  @override
+  State<InteractiveBorrowMachine> createState() => _InteractiveBorrowMachineState();
+}
+
+class _InteractiveBorrowMachineState extends State<InteractiveBorrowMachine> {
+  bool isBorrowed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const SizedBox(width: 30),
+            Text(isBorrowed ? "(3)" : "", style: TextStyle(fontSize: 14, fontWeight: FontWeight.w900, color: Colors.purple.shade300)),
+            const SizedBox(width: 35),
+            Text(isBorrowed ? "(12)" : "", style: TextStyle(fontSize: 14, fontWeight: FontWeight.w900, color: Colors.purple.shade300)),
+          ],
+        ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: const [
+            SizedBox(width: 30),
+            Text("T", style: TextStyle(fontSize: 15, fontWeight: FontWeight.w900, color: Colors.purpleAccent)),
+            SizedBox(width: 35),
+            Text("O", style: TextStyle(fontSize: 15, fontWeight: FontWeight.w900, color: Colors.blueAccent)),
+          ],
+        ),
+        Container(margin: const EdgeInsets.symmetric(vertical: 4), height: 1, width: 110, color: Colors.black12),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const SizedBox(width: 30),
+            Text("4", style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900, decoration: isBorrowed ? TextDecoration.lineThrough : null, decorationColor: Colors.red, color: isBorrowed ? Colors.black38 : Colors.black87)),
+            const SizedBox(width: 30),
+            Text("2", style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900, decoration: isBorrowed ? TextDecoration.lineThrough : null, decorationColor: Colors.red, color: isBorrowed ? Colors.black38 : Colors.blueAccent)),
+          ],
+        ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: const [
+            Text("−", style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: Colors.purpleAccent)),
+            SizedBox(width: 45),
+            Text("1", style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900)),
+            SizedBox(width: 30),
+            Text("7", style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: Colors.blueAccent)),
+          ],
+        ),
+        Container(margin: const EdgeInsets.symmetric(vertical: 6), height: 3, width: 110, color: Colors.black26),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const SizedBox(width: 30),
+            Text(isBorrowed ? "2" : "?", style: TextStyle(fontSize: 26, fontWeight: FontWeight.w900, color: isBorrowed ? Colors.purpleAccent : Colors.grey.shade300)),
+            const SizedBox(width: 30),
+            Text(isBorrowed ? "5" : "?", style: TextStyle(fontSize: 26, fontWeight: FontWeight.w900, color: isBorrowed ? Colors.purpleAccent : Colors.grey.shade300)),
+          ],
+        ),
+        const SizedBox(height: 20),
+        ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.purpleAccent,
+            foregroundColor: Colors.white,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+          onPressed: () => setState(() => isBorrowed = !isBorrowed),
+          child: Text(
+            isBorrowed ? "Reset Power" : "Borrow 1 Ten! ⚡",
+            style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 13),
+          ),
+        ),
+      ],
     );
   }
 }

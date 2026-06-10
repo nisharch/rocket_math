@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:math' as math;
 
 class TimeLearnScreen extends StatefulWidget {
   const TimeLearnScreen({super.key});
@@ -7,345 +8,412 @@ class TimeLearnScreen extends StatefulWidget {
   State<TimeLearnScreen> createState() => _TimeLearnScreenState();
 }
 
-class _TimeLearnScreenState extends State<TimeLearnScreen> {
-  // AM এবং PM অ্যানিমেশন ট্র্যাক করার জন্য স্টেট ভেরিয়েবল
+class _TimeLearnScreenState extends State<TimeLearnScreen> with SingleTickerProviderStateMixin {
+  late TabController _tabController;
   bool isAmSelected = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 3, vsync: this);
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.indigo.shade50,
+      backgroundColor: Colors.amber.shade50, // Warm play-school theme canvas
       appBar: AppBar(
-        title: const Text("⏰ Time Adventure"),
+        title: const Text("⏰ Time Adventure", style: TextStyle(fontWeight: FontWeight.w900, fontSize: 18)),
         backgroundColor: Colors.indigo,
         foregroundColor: Colors.white,
-        elevation: 4,
+        elevation: 2,
+        bottom: TabBar(
+          controller: _tabController,
+          indicatorColor: Colors.white,
+          labelColor: Colors.white,
+          unselectedLabelColor: Colors.white70,
+          labelStyle: const TextStyle(fontWeight: FontWeight.w900, fontSize: 13),
+          tabs: const [
+            Tab(text: "⏰ Hands"),
+            Tab(text: "⏳ Units"),
+            Tab(text: "☀️ AM/PM"),
+          ],
+        ),
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(20),
+      body: TabBarView(
+        controller: _tabController,
         children: [
-          // কার্টুন রোবট গাইড মাসকট
-          _buildHeaderMascot(),
-          const SizedBox(height: 20),
-
-          // ১. ঘড়ির কাঁটা পরিচিতি
-          AnimatedLearnCard(
-            title: "1. Meet the Clock Hands! ⏰",
-            content: "A clock has numbers from 1 to 12 and two main ticking hands:\n\n"
-                     "• Short Hand ➡️ Hour Hand. It tells the hour!\n"
-                     "• Long Hand ➡️ Minute Hand. It tells the minutes!\n\n"
-                     "✨ Rule: When the long hand points to 12, it's 'O'Clock'!",
-            bgColor: Colors.amber.shade50,
+          _buildToyboxMission(
+            title: "Meet the Clock Hands! ⏰",
+            summary: "A clock shows 12 hours. The short hand tracks Hours, and the long hand tracks Minutes!",
+            tip: "💡 Robo-Tip: When the long minute hand points exactly to 12, we always say O'Clock!",
             borderColor: Colors.amber.shade700,
-            bottomChild: _buildClockDiagram(),
+            child: const InteractiveClockHands(),
           ),
-
-          // ২. সময়ের হিসাব
-          AnimatedLearnCard(
-            title: "2. Magical Time Units ⏳",
-            content: "Time moves in a loop! Let's remember the secret codes:\n\n"
-                     "🚀 1 Hour (hr) = 60 Minutes (min)\n"
-                     "⚡ 1 Minute (min) = 60 Seconds (sec)\n"
-                     "☀️ 1 Day = 24 Hours",
-            bgColor: Colors.green.shade50,
+          _buildToyboxMission(
+            title: "Magical Time Units! ⏳",
+            summary: "Time moves in structured loops! Tap the buttons to discover how secret cycles match our day.",
+            tip: "💡 Robo-Tip: 1 full day lasts 24 hours because that is how long Earth takes to spin once!",
             borderColor: Colors.green,
+            child: const InteractiveTimeUnits(), // 🛠️ Fixed: Works perfectly now!
           ),
-
-          // ৩. এএম এবং পিএম (লাইভ ইন্টারেক্টিভ ও অ্যানিমেটেড ডে-নাইট সুইচার সহ)
-          AnimatedLearnCard(
-            title: "3. AM and PM Magic! ☀️🌙",
-            content: "A day has 24 hours, so the clock goes around TWICE!\n"
-                     "Tap the AM/PM buttons below to see the magic change!",
-            bgColor: Colors.blue.shade50,
+          _buildToyboxMission(
+            title: "AM and PM Timings! ☀️🌙",
+            summary: "Because a day has 24 hours and a clock only has 12 numbers, the hands go around TWICE!",
+            tip: "💡 Robo-Tip: 12:00 PM is lunchtime (Noon), while 12:00 AM is deep sleeping time (Midnight)!",
             borderColor: Colors.blueAccent,
-            bottomChild: _buildAnimatedAmPmSky(),
-          ),
-          
-          const SizedBox(height: 30),
-        ],
-      ),
-    );
-  }
-
-  // কার্টুন রোবট গাইড মাসকট উইজেট
-  Widget _buildHeaderMascot() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(25),
-        boxShadow: [BoxShadow(color: Colors.indigo.withOpacity(0.1), blurRadius: 10, offset: const Offset(0, 4))],
-        border: Border.all(color: Colors.indigo.withOpacity(0.2), width: 2),
-      ),
-      child: Row(
-        children: [
-          const Text("🤖", style: TextStyle(fontSize: 50)),
-          const SizedBox(width: 15),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: const [
-                Text("Time Station! 🚀", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.indigo)),
-                SizedBox(height: 2),
-                Text("Let's learn how to read clock hands easily!", style: TextStyle(fontSize: 13, color: Colors.black54, fontWeight: FontWeight.w600)),
-              ],
-            ),
+            child: _buildAnimatedAmPmSky(),
           ),
         ],
       ),
     );
   }
 
-  // ১ নম্বর কার্ড: কাস্টম ঘড়ি ডায়াগ্রাম (৩:০০ টা বাজার ভিজ্যুয়াল)
-  Widget _buildClockDiagram() {
-    return Container(
-      margin: const EdgeInsets.only(top: 15),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20)),
-      child: Column(
-        children: [
-          const Text("⏰ It is 3 O'Clock! (৩:০০ টা)", style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.amber)),
-          const SizedBox(height: 15),
-          Container(
-            width: 100,
-            height: 100,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: Colors.amber.shade50,
-              border: Border.all(color: Colors.amber.shade600, width: 4),
+  Widget _buildToyboxMission({
+    required String title,
+    required String summary,
+    required String tip,
+    required Color borderColor,
+    required Widget child,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: borderColor, width: 3),
+          boxShadow: [
+            BoxShadow(
+              color: borderColor.withOpacity(0.08),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            )
+          ],
+        ),
+        child: Column(
+          children: [
+            Text(
+              title,
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: borderColor),
             ),
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                const Positioned(top: 4, child: Text("12", style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.brown))),
-                const Positioned(right: 6, child: Text("3", style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.brown))),
-                Positioned(
-                  top: 15,
-                  child: Container(height: 35, width: 3, color: Colors.blueAccent),
-                ),
-                Positioned(
-                  right: 18,
-                  child: Container(height: 3, width: 32, color: Colors.redAccent),
-                ),
-                Container(height: 8, width: 8, decoration: const BoxDecoration(color: Colors.brown, shape: BoxShape.circle)),
-              ],
+            const SizedBox(height: 6),
+            Text(
+              summary,
+              style: const TextStyle(fontSize: 13, color: Colors.black54, fontWeight: FontWeight.bold),
+              textAlign: TextAlign.center,
             ),
-          ),
-        ],
+            Expanded(
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                alignment: Alignment.center,
+                child: Center(child: child),
+              ),
+            ),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: borderColor.withOpacity(0.05),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: borderColor.withOpacity(0.2), width: 1.5),
+              ),
+              child: Text(
+                tip,
+                style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: borderColor == Colors.green ? Colors.green.shade800 : borderColor),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  // ৩ নম্বর কার্ড: সম্পূর্ণ অ্যানিমেটেড লাইভ ডে-নাইট উইজেট (AM vs PM)
   Widget _buildAnimatedAmPmSky() {
-    return Container(
-      margin: const EdgeInsets.only(top: 15),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(22),
-      ),
-      child: Column(
-        children: [
-          // ইন্টারেক্টিভ ক্লিক বাটন কন্ট্রোল (AM এবং PM সুইচার)
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              ElevatedButton.styleFrom(
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
                 backgroundColor: isAmSelected ? Colors.orangeAccent : Colors.grey.shade200,
-                elevation: isAmSelected ? 4 : 0,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-              ).buildElevatedButton(
-                onPressed: () => setState(() => isAmSelected = true),
-                child: Text(
-                  "☀️ AM (Morning)",
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: isAmSelected ? Colors.white : Colors.black54,
-                  ),
-                ),
+                elevation: isAmSelected ? 3 : 1,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
               ),
-              const SizedBox(width: 12),
-              ElevatedButton.styleFrom(
-                backgroundColor: !isAmSelected ? Colors.indigo.shade900 : Colors.grey.shade200,
-                elevation: !isAmSelected ? 4 : 0,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-              ).buildElevatedButton(
-                onPressed: () => setState(() => isAmSelected = false),
-                child: Text(
-                  "🌙 PM (Night)",
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: !isAmSelected ? Colors.white : Colors.black54,
-                  ),
-                ),
+              onPressed: () => setState(() => isAmSelected = true),
+              child: Text(
+                "☀️ AM",
+                style: TextStyle(fontWeight: FontWeight.w900, color: isAmSelected ? Colors.white : Colors.black54),
               ),
-            ],
-          ),
-          const SizedBox(height: 16),
-
-          // লাইভ অ্যানিমেটেড কন্টেইনার আকাশ (যা স্মুথলি কালার এবং উইজেট চেঞ্জ করবে)
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 500),
-            curve: Curves.easeInOutCubic,
-            width: double.infinity,
-            padding: const EdgeInsets.all(18),
-            decoration: BoxDecoration(
-              // AM হলে উজ্জ্বল হলুদ-কমলা আকাশ, PM হলে রাতের ডার্ক ব্লু আকাশ
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: isAmSelected
-                    ? [Colors.amber.shade300, Colors.orange.shade100]
-                    : [const Color(0xFF0F2027), const Color(0xFF203A43)],
-              ),
-              borderRadius: BorderRadius.circular(18),
-              boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(0, 2))],
             ),
-            child: AnimatedSize(
-              duration: const Duration(milliseconds: 300),
-              child: Row(
+            const SizedBox(width: 16),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: !isAmSelected ? Colors.indigo.shade900 : Colors.grey.shade200,
+                elevation: !isAmSelected ? 3 : 1,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              ),
+              onPressed: () => setState(() => !isAmSelected ? null : isAmSelected = false),
+              child: Text(
+                "🌙 PM",
+                style: TextStyle(fontWeight: FontWeight.w900, color: !isAmSelected ? Colors.white : Colors.black54),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 24),
+        AnimatedContainer(
+          duration: const Duration(milliseconds: 400),
+          curve: Curves.easeInOutCubic,
+          width: 260,
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: isAmSelected
+                  ? [Colors.amber.shade300, Colors.orange.shade100]
+                  : [const Color(0xFF0F2027), const Color(0xFF203A43)],
+            ),
+            borderRadius: BorderRadius.circular(22),
+            boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 6, offset: Offset(0, 3))],
+          ),
+          child: Column(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: Colors.black26,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  isAmSelected ? "12:00 Midnight\nto 11:59 Morning" : "12:00 Noon\nto 11:59 Night",
+                  style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold, height: 1.3),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // আইকন এবং টেক্সট অ্যানিমেশন পপ-আপ ইফেক্ট সহ
                   AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 400),
+                    duration: const Duration(milliseconds: 300),
                     transitionBuilder: (child, animation) => ScaleTransition(scale: animation, child: child),
                     child: Text(
                       isAmSelected ? "☀️" : "🌙✨",
                       key: ValueKey<bool>(isAmSelected),
-                      style: const TextStyle(fontSize: 45),
+                      style: const TextStyle(fontSize: 42),
                     ),
                   ),
-                  const SizedBox(width: 15),
+                  const SizedBox(width: 16),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          isAmSelected ? "Good Morning! 🚀" : "Sweet Dreams! 😴",
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w900,
-                            color: isAmSelected ? Colors.brown.shade800 : Colors.white,
-                          ),
+                          isAmSelected ? "Morning! 🚀" : "Night! 😴",
+                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: isAmSelected ? Colors.brown.shade800 : Colors.white),
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          isAmSelected
-                              ? "Time for breakfast, sunrise, and getting ready for school! 🎒"
-                              : "Time for homework, dinner, and sleeping in a dark room! 🌌",
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                            color: isAmSelected ? Colors.brown.shade600 : Colors.white70,
-                          ),
+                          isAmSelected ? "Time for breakfast and school!" : "Time for dinner and sweet dreams!",
+                          style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: isAmSelected ? Colors.brown.shade600 : Colors.white70),
                         ),
                       ],
                     ),
                   ),
                 ],
               ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// --- MODULE 1: INTERACTIVE CLOCK HANDS ---
+class InteractiveClockHands extends StatefulWidget {
+  const InteractiveClockHands({super.key});
+
+  @override
+  State<InteractiveClockHands> createState() => _InteractiveClockHandsState();
+}
+
+class _InteractiveClockHandsState extends State<InteractiveClockHands> {
+  int currentHour = 3;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          decoration: BoxDecoration(color: Colors.amber.shade100, borderRadius: BorderRadius.circular(12)),
+          child: Text(
+            "⏰ It is $currentHour O'Clock!",
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: Colors.amber.shade900),
+          ),
+        ),
+        const SizedBox(height: 24),
+        Container(
+          width: 170,
+          height: 170,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: Colors.amber.shade50,
+            border: Border.all(color: Colors.amber.shade600, width: 5.5),
+            boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 6, offset: Offset(0, 4))],
+          ),
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              ...List.generate(12, (index) {
+                int number = index == 0 ? 12 : index;
+                double angle = (index * 30) * (math.pi / 180);
+                double radius = 62.0;
+                return Transform.translate(
+                  offset: Offset(radius * math.sin(angle), -radius * math.cos(angle)),
+                  child: Text(
+                    "$number",
+                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w900, color: Colors.brown),
+                  ),
+                );
+              }),
+              Positioned(
+                top: 20,
+                child: Container(height: 65, width: 4, color: Colors.blueAccent),
+              ),
+              AnimatedRotation(
+                turns: (currentHour / 12),
+                duration: const Duration(milliseconds: 300),
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    Container(height: 80, width: 80, color: Colors.transparent),
+                    Positioned(
+                      top: 14,
+                      child: Container(height: 28, width: 5.5, color: Colors.redAccent),
+                    ),
+                  ],
+                ),
+              ),
+              Container(height: 11, width: 11, decoration: const BoxDecoration(color: Colors.brown, shape: BoxShape.circle)),
+            ],
+          ),
+        ),
+        const SizedBox(height: 24),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            IconButton(
+              icon: const Icon(Icons.remove_circle, color: Colors.amber, size: 40),
+              onPressed: currentHour > 1 ? () => setState(() => currentHour--) : null,
             ),
+            const SizedBox(width: 24),
+            IconButton(
+              icon: const Icon(Icons.add_circle, color: Colors.amber, size: 40),
+              onPressed: currentHour < 12 ? () => setState(() => currentHour++) : null,
+            ),
+          ],
+        )
+      ],
+    );
+  }
+}
+
+// --- MODULE 2: INTERACTIVE TIME UNITS TRACKER (🛠️ FIX: Clean State variables isolation) ---
+class InteractiveTimeUnits extends StatefulWidget {
+  const InteractiveTimeUnits({super.key});
+
+  @override
+  State<InteractiveTimeUnits> createState() => _InteractiveTimeUnitsState();
+}
+
+class _InteractiveTimeUnitsState extends State<InteractiveTimeUnits> {
+  String selectedUnit = "1 Hour";
+  String targetFormula = "60 Minutes";
+  String practicalContextInfo = "About the duration of 1 full school class period! 🏫";
+
+  void updateUnitData(String unit, String formula, String explanationText) {
+    setState(() {
+      selectedUnit = unit;
+      targetFormula = formula;
+      practicalContextInfo = explanationText;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 250,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+            decoration: BoxDecoration(
+              color: Colors.green.shade50,
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: Colors.green.shade300, width: 2),
+            ),
+            child: Column(
+              children: [
+                Text(
+                  "$selectedUnit = $targetFormula",
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: Colors.green.shade800),
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  practicalContextInfo,
+                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.black54, height: 1.3),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            alignment: WrapAlignment.center,
+            children: [
+              _buildUnitButton("1 Hour", "60 Minutes", "About the duration of 1 full school class period! 🏫"),
+              _buildUnitButton("1 Minute", "60 Seconds", "The length of a short cartoon intro song video clip! 🎬"),
+              _buildUnitButton("1 Second", "1 Tick-Tock", "As quick as a single snap of your fingers or a heartbeat! ❤️"),
+              _buildUnitButton("1 Day", "24 Hours", "The total time it takes for the earth to rotate once! 🌍"),
+            ],
           ),
         ],
       ),
     );
   }
-}
 
-// অল-প্ল্যাটফর্ম রেসপন্সিভ হোভার ও টাচ অ্যানিমেটেড লার্ন কার্ড উইজেট
-class AnimatedLearnCard extends StatefulWidget {
-  final String title;
-  final String content;
-  final Color bgColor;
-  final Color borderColor;
-  final Widget? bottomChild;
-
-  const AnimatedLearnCard({
-    super.key,
-    required this.title,
-    required this.content,
-    required this.bgColor,
-    required this.borderColor,
-    this.bottomChild,
-  });
-
-  @override
-  State<AnimatedLearnCard> createState() => _AnimatedLearnCardState();
-}
-
-class _AnimatedLearnCardState extends State<AnimatedLearnCard> {
-  bool _isHovered = false;
-  bool _isPressed = false;
-
-  @override
-  Widget build(BuildContext context) {
-    double transformY = _isPressed ? 2.0 : (_isHovered ? -6.0 : 0.0);
-    double scale = _isPressed ? 0.98 : (_isHovered ? 1.02 : 1.0);
-
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      onEnter: (_) => setState(() => _isHovered = true),
-      onExit: (_) => setState(() {
-        _isHovered = false;
-        _isPressed = false;
-      }),
-      child: GestureDetector(
-        onTapDown: (_) => setState(() => _isPressed = true),
-        onTapUp: (_) => setState(() => _isPressed = false),
-        onTapCancel: () => setState(() => _isPressed = false),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          curve: Curves.easeOutCubic,
-          margin: const EdgeInsets.only(bottom: 20),
-          padding: const EdgeInsets.all(18),
-          transform: Matrix4.identity()..translate(0.0, transformY)..scale(scale),
-          decoration: BoxDecoration(
-            color: widget.bgColor,
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: _isHovered ? widget.borderColor : widget.borderColor.withOpacity(0.4), width: _isHovered ? 3 : 2),
-            boxShadow: [
-              BoxShadow(
-                color: widget.borderColor.withOpacity(_isHovered ? 0.2 : 0.06),
-                blurRadius: _isHovered ? 14.0 : 4.0,
-                offset: Offset(0, _isHovered ? 6.0 : 2.0),
-              ),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Expanded(child: Text(widget.title, style: TextStyle(fontSize: 19, fontWeight: FontWeight.bold, color: widget.borderColor))),
-                  AnimatedOpacity(
-                    duration: const Duration(milliseconds: 200),
-                    opacity: _isHovered ? 1.0 : 0.3,
-                    child: Text("⭐", style: TextStyle(fontSize: _isHovered ? 21 : 16)),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 6),
-              Text(widget.content, style: const TextStyle(fontSize: 15, height: 1.4, color: Colors.black87, fontWeight: FontWeight.w500)),
-              if (widget.bottomChild != null) widget.bottomChild!,
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// ElevatedButton এর জন্য কাস্টম এক্সটেনশন মেথড (কোড এরর ফ্রি রাখার জন্য)
-extension on ButtonStyle {
-  Widget buildElevatedButton({required VoidCallback? onPressed, required Widget child}) {
+  Widget _buildUnitButton(String unitTitle, String transformValue, String extraContext) {
+    bool isCurrent = selectedUnit == unitTitle;
     return ElevatedButton(
-      style: this,
-      onPressed: onPressed,
-      child: child,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: isCurrent ? Colors.green : Colors.grey.shade100,
+        foregroundColor: isCurrent ? Colors.white : Colors.black87,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+      onPressed: () => updateUnitData(unitTitle, transformValue, extraContext),
+      child: Text(unitTitle, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 12)),
     );
   }
 }

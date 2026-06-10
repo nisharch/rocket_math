@@ -7,387 +7,392 @@ class AdditionBigNumbersLearnScreen extends StatefulWidget {
   State<AdditionBigNumbersLearnScreen> createState() => _AdditionBigNumbersLearnScreenState();
 }
 
-class _AdditionBigNumbersLearnScreenState extends State<AdditionBigNumbersLearnScreen> {
+class _AdditionBigNumbersLearnScreenState extends State<AdditionBigNumbersLearnScreen> with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 3, vsync: this);
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.teal.shade50,
+      backgroundColor: Colors.amber.shade50, // Premium warm toybox theme
       appBar: AppBar(
-        title: const Text("🚀 Class 4 Big Numbers Addition"),
+        title: const Text("🚀 Large Numbers Orbit", style: TextStyle(fontWeight: FontWeight.w900, fontSize: 18)),
         backgroundColor: Colors.teal.shade700,
         foregroundColor: Colors.white,
-        elevation: 4,
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(20),
-        children: [
-          // Mascot Guide
-          _buildHeaderMascot(),
-          const SizedBox(height: 20),
-
-          // 1. Core Concept of Regrouping Columns
-          AnimatedLearnCard(
-            title: "1. The Place Value Grid Blueprint 🗺️",
-            content: "Always align your numbers perfectly from right to left! For 3 and 4 digits, we track columns up to the Thousands place:\n\n"
-                "• Th = Thousands (1,000s)\n"
-                "• H = Hundreds (100s)\n"
-                "• T = Tens (10s)\n"
-                "• O = Ones (1s)",
-            bgColor: Colors.white,
-            borderColor: Colors.teal.shade700,
-            bottomChild: _buildPlaceValueHeaders(),
-          ),
-
-          // 2. Training Mission: 3-Digit Run
-          AnimatedLearnCard(
-            title: "2. Warm-Up Mission: 3-Digit Run! ⚡",
-            content: "Let's review a standard 3-digit addition problem with carry-overs: 468 + 254.",
-            bgColor: Colors.blue.shade50,
-            borderColor: Colors.blueAccent,
-            bottomChild: _build3DigitAdditionTrack(),
-          ),
-
-          // 3. Main Mission: 4-Digit Conquest
-          AnimatedLearnCard(
-            title: "3. Main Mission: 4-Digit Conquest! 🚀",
-            content: "Now let's step up to bigger numbers! Let's calculate 4,582 + 2,743 step-by-step.",
-            bgColor: Colors.purple.shade50,
-            borderColor: Colors.purple,
-            bottomChild: _build4DigitAdditionTrack(),
-          ),
-
-          // 4. Practical Class 4 Practice Quiz Challenge
-          AnimatedLearnCard(
-            title: "4. Space Academy Quiz! 📝",
-            content: "Problem: A cargo train carries 3,450 kg of rice sacks and 2,870 kg of wheat sacks. What is the total mass combined?\n\n"
-                "• Step 1: Ones Column ➡️ 0 + 0 = 0\n"
-                "• Step 2: Tens Column ➡️ 5 + 7 = 12 (Write 2, Carry 1 to Hundreds)\n"
-                "• Step 3: Hundreds Column ➡️ 4 + 8 + 1 (Carry) = 13 (Write 3, Carry 1 to Thousands)\n"
-                "• Step 4: Thousands Column ➡️ 3 + 2 + 1 (Carry) = 6\n\n"
-                "🎉 Total Combined Weight = 6,320 kg altogether!",
-            bgColor: Colors.green.shade50,
-            borderColor: Colors.green.shade700,
-          ),
-
-          const SizedBox(height: 30),
-        ],
-      ),
-    );
-  }
-
-  // Cartoon Robot Mascot Widget
-  Widget _buildHeaderMascot() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(25),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.teal.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          )
-        ],
-        border: Border.all(color: Colors.teal.withOpacity(0.2), width: 2),
-      ),
-      child: Row(
-        children: [
-          const Text("🤖", style: TextStyle(fontSize: 50)),
-          const SizedBox(width: 15),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  "Large Numbers Orbit! 🪐",
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.teal.shade800,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                const Text(
-                  "Let's master 3-digit and 4-digit addition columns with carry-over powers cleanly!",
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: Colors.black54,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // Place value header row map labels
-  Widget _buildPlaceValueHeaders() {
-    return Container(
-      margin: const EdgeInsets.only(top: 12),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(color: Colors.teal.shade50.withOpacity(0.3), borderRadius: BorderRadius.circular(16)),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: const [
-          Text("Th\n(Thousands)", textAlign: TextAlign.center, style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.teal)),
-          Text("H\n(Hundreds)", textAlign: TextAlign.center, style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.black54)),
-          Text("T\n(Tens)", textAlign: TextAlign.center, style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.black54)),
-          Text("O\n(Ones)", textAlign: TextAlign.center, style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.blueAccent)),
-        ],
-      ),
-    );
-  }
-
-  // 3-Digit vertical calculation tracking section
-  Widget _build3DigitAdditionTrack() {
-    return Container(
-      margin: const EdgeInsets.only(top: 15),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.blueAccent.withOpacity(0.15)),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: BoxDecoration(color: Colors.grey.shade50, borderRadius: BorderRadius.circular(12)),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: const [
-                    Text("1", style: TextStyle(fontSize: 12, color: Colors.purple, fontWeight: FontWeight.bold)),
-                    SizedBox(width: 14),
-                    Text("1", style: TextStyle(fontSize: 12, color: Colors.purple, fontWeight: FontWeight.bold)),
-                    SizedBox(width: 24),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                const Text("4  6  8", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, letterSpacing: 6)),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: const [
-                    Text("+ ", style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.blueAccent)),
-                    Text("2  5  4", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, letterSpacing: 6)),
-                  ],
-                ),
-                Container(margin: const EdgeInsets.symmetric(vertical: 6), height: 2, width: 75, color: Colors.black87),
-                const Text("7  2  2", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: Colors.green, letterSpacing: 6)),
-              ],
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              children: [
-                _buildTrackNode("1", "Ones place", "8 + 4 = 12. Write 2, carry over 1 to Tens.", Colors.blue),
-                _buildTrackLine(),
-                _buildTrackNode("2", "Tens place", "6 + 5 + 1 (Carry) = 12. Write 2, carry over 1 to Hundreds.", Colors.orange),
-                _buildTrackLine(),
-                _buildTrackNode("3", "Hundreds place", "4 + 2 + 1 (Carry) = 7. Total sum = 722!", Colors.green),
-              ],
-            ),
-          )
-        ],
-      ),
-    );
-  }
-
-  // 4-Digit vertical calculation tracking section
-  Widget _build4DigitAdditionTrack() {
-    return Container(
-      margin: const EdgeInsets.only(top: 15),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.purple.withOpacity(0.15)),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: BoxDecoration(color: Colors.grey.shade50, borderRadius: BorderRadius.circular(12)),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: const [
-                    Text("1", style: TextStyle(fontSize: 12, color: Colors.purple, fontWeight: FontWeight.bold)),
-                    SizedBox(width: 14),
-                    Text("1", style: TextStyle(fontSize: 12, color: Colors.purple, fontWeight: FontWeight.bold)),
-                    SizedBox(width: 44),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                const Text("4  5  8  2", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, letterSpacing: 6)),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: const [
-                    Text("+ ", style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.purple)),
-                    Text("2  7  4  3", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, letterSpacing: 6)),
-                  ],
-                ),
-                Container(margin: const EdgeInsets.symmetric(vertical: 6), height: 2, width: 90, color: Colors.black87),
-                const Text("7  3  2  5", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: Colors.green, letterSpacing: 6)),
-              ],
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              children: [
-                _buildTrackNode("1", "Ones & Tens", "2+3=5. Then 8+4=12 (Write 2, carry over 1 to Hundreds).", Colors.blue),
-                _buildTrackLine(),
-                _buildTrackNode("2", "Hundreds Column", "5 + 7 + 1 (Carry) = 13. Write 3, carry over 1 to Thousands.", Colors.orange),
-                _buildTrackLine(),
-                _buildTrackNode("3", "Thousands Column", "4 + 2 + 1 (Carry) = 7. Write 7 down.", Colors.purple),
-                _buildTrackLine(),
-                _buildTrackNode("4", "Mission Clear!", "Your total 4-digit sum calculation is 7,325! ✨", Colors.green),
-              ],
-            ),
-          )
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTrackNode(String stepNum, String title, String desc, Color color) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        CircleAvatar(
-          radius: 10,
-          backgroundColor: color,
-          child: Text(stepNum, style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+        elevation: 2,
+        bottom: TabBar(
+          controller: _tabController,
+          indicatorColor: Colors.white,
+          labelColor: Colors.white,
+          unselectedLabelColor: Colors.white70,
+          labelStyle: const TextStyle(fontWeight: FontWeight.w900, fontSize: 13),
+          tabs: const [
+            Tab(text: "🗺️ Grid Spawn"),
+            Tab(text: "⚡ Dual Engine"),
+            Tab(text: "📦 Cargo Scale"),
+          ],
         ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(title, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: color)),
-              Text(desc, style: const TextStyle(fontSize: 11, color: Colors.black54, height: 1.2)),
-            ],
+      ),
+      body: TabBarView(
+        controller: _tabController,
+        children: [
+          _buildToyboxCard(
+            borderColor: Colors.teal.shade700,
+            child: const InteractiveGridSpawner(),
           ),
-        )
+          _buildToyboxCard(
+            borderColor: Colors.purple,
+            child: const InteractiveDualAdditionEngine(),
+          ),
+          _buildToyboxCard(
+            borderColor: Colors.orange.shade800,
+            child: const CargoScaleToy(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildToyboxCard({required Color borderColor, required Widget child}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: borderColor, width: 3),
+          boxShadow: [
+            BoxShadow(
+              color: borderColor.withOpacity(0.08),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            )
+          ],
+        ),
+        child: Center(child: child),
+      ),
+    );
+  }
+}
+
+// --- TAB 1: INTERACTIVE GRID SPAWNER ---
+class InteractiveGridSpawner extends StatefulWidget {
+  const InteractiveGridSpawner({super.key});
+
+  @override
+  State<InteractiveGridSpawner> createState() => _InteractiveGridSpawnerState();
+}
+
+class _InteractiveGridSpawnerState extends State<InteractiveGridSpawner> {
+  int activeColumn = -1; // -1: none, 0: Th, 1: H, 2: T, 3: O
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const Text("🗺️ Tap a Column to See its Weight Value!", style: TextStyle(fontWeight: FontWeight.w900, fontSize: 14, color: Colors.blueGrey)),
+        const SizedBox(height: 20),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            _buildSpawnColumn("Th", "1000s", Colors.teal, activeColumn == 0, () => setState(() => activeColumn = 0)),
+            _buildSpawnColumn("H", "100s", Colors.purple, activeColumn == 1, () => setState(() => activeColumn = 1)),
+            _buildSpawnColumn("T", "10s", Colors.orange.shade800, activeColumn == 2, () => setState(() => activeColumn = 2)),
+            _buildSpawnColumn("O", "1s", Colors.blueAccent, activeColumn == 3, () => setState(() => activeColumn = 3)),
+          ],
+        ),
+        const SizedBox(height: 24),
+        AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: activeColumn == -1 ? Colors.grey.shade100 : Colors.grey.shade50,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: Colors.black12),
+          ),
+          width: 240,
+          alignment: Alignment.center,
+          child: Text(
+            activeColumn == 0 ? "⚡ Thousands Multiplier block!\nHolds: 1000, 2000, 3000..." :
+            activeColumn == 1 ? "🔮 Hundreds Room pack!\nHolds: 100, 200, 300..." :
+            activeColumn == 2 ? "🔸 Tens Rod station!\nHolds: 10, 20, 30, 40..." :
+            activeColumn == 3 ? "💎 Single Ones units tokens!\nHolds: 1, 2, 3, 4, 5..." : "Click a card station above!",
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.black87, height: 1.3),
+            textAlign: TextAlign.center,
+          ),
+        ),
       ],
     );
   }
 
-  Widget _buildTrackLine() {
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: Container(
-        margin: const EdgeInsets.only(left: 9, top: 2, bottom: 2),
-        height: 12,
-        width: 2,
-        color: Colors.grey.shade200,
+  Widget _buildSpawnColumn(String name, String sub, Color col, bool selected, VoidCallback tap) {
+    return GestureDetector(
+      onTap: tap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        width: 52,
+        height: 70,
+        margin: const EdgeInsets.symmetric(horizontal: 3),
+        decoration: BoxDecoration(
+          color: selected ? col : col.withOpacity(0.08),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: col, width: selected ? 3 : 1.5),
+        ),
+        alignment: Alignment.center,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(name, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: selected ? Colors.white : col)),
+            Text(sub, style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: selected ? Colors.white70 : Colors.black45)),
+          ],
+        ),
       ),
     );
   }
 }
 
-// Hover Responsive Animated Learn Card Widget
-class AnimatedLearnCard extends StatefulWidget {
-  final String title;
-  final String content;
-  final Color bgColor;
-  final Color borderColor;
-  final Widget? bottomChild;
-
-  const AnimatedLearnCard({
-    super.key,
-    required this.title,
-    required this.content,
-    required this.bgColor,
-    required this.borderColor,
-    this.bottomChild,
-  });
+// --- TAB 2: INTERACTIVE DUAL CALCULATOR ENGINE ---
+class InteractiveDualAdditionEngine extends StatefulWidget {
+  const InteractiveDualAdditionEngine({super.key});
 
   @override
-  State<AnimatedLearnCard> createState() => _AnimatedLearnCardState();
+  State<InteractiveDualAdditionEngine> createState() => _InteractiveDualAdditionEngineState();
 }
 
-class _AnimatedLearnCardState extends State<AnimatedLearnCard> {
-  bool _isHovered = false;
-  bool _isPressed = false;
+class _InteractiveDualAdditionEngineState extends State<InteractiveDualAdditionEngine> {
+  bool isFourDigitMode = false;
+  int currentStep = 0;
 
   @override
   Widget build(BuildContext context) {
-    double transformY = _isPressed ? 2.0 : (_isHovered ? -6.0 : 0.0);
-    double scale = _isPressed ? 0.98 : (_isHovered ? 1.02 : 1.0);
+    int maxSteps = isFourDigitMode ? 4 : 3;
 
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      onEnter: (_) => setState(() => _isHovered = true),
-      onExit: (_) => setState(() {
-        _isHovered = false;
-        _isPressed = false;
-      }),
-      child: GestureDetector(
-        onTapDown: (_) => setState(() => _isPressed = true),
-        onTapUp: (_) => setState(() => _isPressed = false),
-        onTapCancel: () => setState(() => _isPressed = false),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          curve: Curves.easeOutCubic,
-          margin: const EdgeInsets.only(bottom: 20),
-          padding: const EdgeInsets.all(18),
-          transform: Matrix4.identity()..translate(0.0, transformY)..scale(scale),
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            _buildModeTab("3-Digit Mission", !isFourDigitMode, () => setState(() { isFourDigitMode = false; currentStep = 0; })),
+            const SizedBox(width: 8),
+            _buildModeTab("4-Digit Mission", isFourDigitMode, () => setState(() { isFourDigitMode = true; currentStep = 0; })),
+          ],
+        ),
+        const SizedBox(height: 20),
+        Container(
+          padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: widget.bgColor,
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(
-              color: _isHovered ? widget.borderColor : widget.borderColor.withOpacity(0.4), 
-              width: _isHovered ? 3 : 2,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: widget.borderColor.withOpacity(_isHovered ? 0.2 : 0.06),
-                blurRadius: _isHovered ? 14.0 : 4.0,
-                offset: Offset(0, _isHovered ? 6.0 : 2.0),
-              ),
-            ],
+            color: Colors.purple.shade50,
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: Colors.purple.withOpacity(0.3), width: 2),
           ),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Expanded(
-                    child: Text(
-                      widget.title, 
-                      style: TextStyle(fontSize: 19, fontWeight: FontWeight.bold, color: widget.borderColor),
-                    ),
+                  if (isFourDigitMode) ...[
+                    _buildCarryIcon(currentStep >= 4),
+                    const SizedBox(width: 25),
+                  ],
+                  _buildCarryIcon(currentStep >= 3),
+                  const SizedBox(width: 25),
+                  _buildCarryIcon(currentStep >= 2),
+                  const SizedBox(width: 25),
+                  _buildCarryIcon(false),
+                  const SizedBox(width: 15),
+                ],
+              ),
+              const SizedBox(height: 4),
+              Column(
+                children: [
+                  Text(
+                    isFourDigitMode ? "  4  5  8  2" : "  4  6  8",
+                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, letterSpacing: 6),
                   ),
-                  AnimatedOpacity(
-                    duration: const Duration(milliseconds: 200),
-                    opacity: _isHovered ? 1.0 : 0.3,
-                    child: Text("⭐", style: TextStyle(fontSize: _isHovered ? 21 : 16)),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Text("+", style: TextStyle(fontWeight: FontWeight.w900, color: Colors.purple, fontSize: 16)),
+                      Text(
+                        isFourDigitMode ? "  2  7  4  3" : "  2  5  4",
+                        style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, letterSpacing: 6),
+                      ),
+                    ],
                   ),
                 ],
               ),
-              const SizedBox(height: 6),
-              Text(
-                widget.content, 
-                style: const TextStyle(fontSize: 15, height: 1.4, color: Colors.black87, fontWeight: FontWeight.w500),
+              Container(margin: const EdgeInsets.symmetric(vertical: 6), height: 3, width: 140, color: Colors.black38),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: isFourDigitMode 
+                  ? [
+                      _buildFinalDigit(currentStep >= 4 ? "7" : "?", currentStep == 4),
+                      _buildFinalDigit(currentStep >= 3 ? "3" : "?", currentStep == 3),
+                      _buildFinalDigit(currentStep >= 2 ? "2" : "?", currentStep == 2),
+                      _buildFinalDigit(currentStep >= 1 ? "5" : "?", currentStep == 1),
+                    ]
+                  : [
+                      _buildFinalDigit(currentStep >= 3 ? "7" : "?", currentStep == 3),
+                      _buildFinalDigit(currentStep >= 2 ? "2" : "?", currentStep == 2),
+                      _buildFinalDigit(currentStep >= 1 ? "2" : "?", currentStep == 1),
+                    ],
               ),
-              if (widget.bottomChild != null) widget.bottomChild!,
             ],
           ),
         ),
+        const SizedBox(height: 16),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: List.generate(maxSteps, (i) {
+            int target = i + 1;
+            bool active = currentStep == target;
+            return GestureDetector(
+              onTap: () => setState(() => currentStep = target),
+              child: Container(
+                margin: const EdgeInsets.symmetric(horizontal: 3),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: active ? Colors.purple : Colors.white,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.purple.withOpacity(0.3)),
+                ),
+                child: Text(
+                  "Step $target",
+                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.w900, color: active ? Colors.white : Colors.purple),
+                ),
+              ),
+            );
+          }),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildModeTab(String text, bool active, VoidCallback action) {
+    return GestureDetector(
+      onTap: action,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        decoration: BoxDecoration(
+          color: active ? Colors.purple : Colors.grey.shade100,
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Text(text, style: TextStyle(fontWeight: FontWeight.w900, fontSize: 12, color: active ? Colors.white : Colors.black54)),
       ),
+    );
+  }
+
+  Widget _buildCarryIcon(bool highlighted) {
+    return Container(
+      width: 18,
+      height: 18,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(color: highlighted ? Colors.deepOrangeAccent : Colors.transparent, shape: BoxShape.circle),
+      child: Text(highlighted ? "1" : "", style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w900, color: Colors.white)),
+    );
+  }
+
+  Widget _buildFinalDigit(String char, bool active) {
+    return Container(
+      width: 32,
+      alignment: Alignment.center,
+      child: Text(
+        char,
+        style: TextStyle(
+          fontSize: 20,
+          fontWeight: FontWeight.w900,
+          color: active ? Colors.purple : (char != "?" ? Colors.green.shade700 : Colors.black26),
+        ),
+      ),
+    );
+  }
+}
+
+// --- TAB 3: CARGO SCALE TOY (🛠️ FIX: HIGH-CONTRAST ACCESSIBILITY COLOR MODIFICATIONS) ---
+class CargoScaleToy extends StatefulWidget {
+  const CargoScaleToy({super.key});
+
+  @override
+  State<CargoScaleToy> createState() => _CargoScaleToyState();
+}
+
+class _CargoScaleToyState extends State<CargoScaleToy> {
+  double scaleWeightValue = 3000;
+
+  @override
+  Widget build(BuildContext context) {
+    bool isMatch = scaleWeightValue.toInt() == 6320;
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: Colors.orange.shade50,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.orange.shade300, width: 2),
+          ),
+          child: Column(
+            children: [
+              const Text("📦 TARGET WEIGHT manifest: 6,320 kg", style: TextStyle(fontWeight: FontWeight.w900, fontSize: 13, color: Colors.orangeAccent)),
+              const SizedBox(height: 12),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Text("⚖️ Current Load: ", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.black54)),
+                  Text(
+                    "${scaleWeightValue.toInt()} kg",
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: isMatch ? Colors.green : Colors.red),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+        Slider(
+          value: scaleWeightValue,
+          min: 3000,
+          max: 7000,
+          divisions: 400,
+          activeColor: isMatch ? Colors.green : Colors.orange.shade800,
+          inactiveColor: Colors.orange.shade100,
+          onChanged: (val) => setState(() => scaleWeightValue = val),
+        ),
+        const SizedBox(height: 4),
+        // 🛠️ Fixed: Converted text visibility parameters to high contrast bold configs
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          decoration: BoxDecoration(
+            color: isMatch ? Colors.green : Colors.orange.shade100, // Safe warm background tint
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: isMatch ? Colors.green : Colors.orange.shade300, width: 1.5),
+          ),
+          child: Text(
+            isMatch ? "🎉 MATCH CLEAR! ROCKET LAUNCHED!" : "Slide Slider to match 6,320 kg exactly!",
+            style: TextStyle(
+              fontWeight: FontWeight.w900, 
+              fontSize: 12, 
+              color: isMatch ? Colors.white : Colors.black87, // Strong dark grey color definition
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

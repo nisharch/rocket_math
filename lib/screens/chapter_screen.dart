@@ -45,16 +45,16 @@ class ChapterScreen extends StatelessWidget {
         ),
         child: CustomScrollView(
           slivers: [
-            // হেডিং স্পেসটিকে এখানে চিকন (Thin) করা হয়েছে
+            // 
             SliverAppBar(
-              expandedHeight: 70.0, // হাইট কমিয়ে স্লিক ও চিকন করা হয়েছে
+              expandedHeight: 70.0, 
               floating: false,
               pinned: true,
               backgroundColor: const Color(0xFF6C5CE7),
               elevation: 4,
               shape: const RoundedRectangleBorder(
                 borderRadius: BorderRadius.vertical(
-                  bottom: Radius.circular(20), // কর্নার রেডিয়াস একটু কমানো হয়েছে ম্যাচ করার জন্য
+                  bottom: Radius.circular(20), 
                 ),
               ),
               centerTitle: true,
@@ -67,7 +67,7 @@ class ChapterScreen extends StatelessWidget {
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
-                      fontSize: 18, // স্ক্রিনের সাথে মানানসই ফন্ট সাইজ
+                      fontSize: 18, 
                       shadows: [
                         Shadow(
                           blurRadius: 4.0,
@@ -124,7 +124,7 @@ class ChapterScreen extends StatelessWidget {
     if (title.contains("Addition(Big Numbers)")) {
       screen = const AdditionBigNumbersLearnScreen();
     } else if (title.contains("Subtraction(Big Numbers)")) {
-      screen = const SubtractionBigNumbersScreen();
+      screen = const SubtractionBigNumbersLearnScreen();
     } else if (title.contains('Multiplication(Big Numbers)')) {
       screen = const MultiplicationBigNumbersScreen();
     } else if (title.contains('Division with Remainders')) {

@@ -7,159 +7,153 @@ class MeasurementLearnScreen extends StatefulWidget {
   State<MeasurementLearnScreen> createState() => _MeasurementLearnScreenState();
 }
 
-class _MeasurementLearnScreenState extends State<MeasurementLearnScreen> {
+class _MeasurementLearnScreenState extends State<MeasurementLearnScreen> with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 3, vsync: this);
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.teal.shade50,
+      backgroundColor: Colors.amber.shade50, // Play-school warm canvas
       appBar: AppBar(
-        title: const Text("📏 Measurement Lab"),
+        title: const Text("📏 Measurement Toybox", style: TextStyle(fontWeight: FontWeight.w900, fontSize: 18)),
         backgroundColor: Colors.teal,
         foregroundColor: Colors.white,
-        elevation: 4,
+        elevation: 2,
+        bottom: TabBar(
+          controller: _tabController,
+          indicatorColor: Colors.white,
+          labelColor: Colors.white,
+          unselectedLabelColor: Colors.white70,
+          labelStyle: const TextStyle(fontWeight: FontWeight.w900, fontSize: 13),
+          tabs: const [
+            Tab(text: "📏 Length"),
+            Tab(text: "⚖️ Weight"),
+            Tab(text: "🧪 Capacity"),
+          ],
+        ),
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(20),
+      body: TabBarView(
+        controller: _tabController,
         children: [
-          // কার্টুন রোবট গাইড মাসকট
-          _buildHeaderMascot(),
-          const SizedBox(height: 20),
-
-          // ১. দৈর্ঘ্য পরিমাপ (সম্পূর্ণ নতুন এবং আকর্ষণীয় পেন্সিল স্কেল সহ)
-          AnimatedLearnCard(
-            title: "1. Length (কতটা লম্বা?) 📏",
-            content: "We measure how LONG or tall something is using Length! "
-                     "For small things (like a pencil), we use Centimeters (cm). "
-                     "For big things (like a room), we use Meters (m)!\n\n"
-                     "✨ Ruler Magic: 1 Meter (m) = 100 Centimeters (cm)",
-            bgColor: Colors.orange.shade50,
+          _buildToyboxMission(
+            title: "Scale Radar Scanner! 🔍",
+            child: const InteractiveLengthRuler(),
             borderColor: Colors.orange,
-            bottomChild: _buildLengthRulerDiagram(),
           ),
-
-          // ২. ওজন পরিমাপ
-          AnimatedLearnCard(
-            title: "2. Weight (কতটা ভারী?) ⚖️",
-            content: "Weight tells us how HEAVY an object is! "
-                     "For light things (like an apple), we use Grams (g). "
-                     "For heavy things (like your school bag), we use Kilograms (kg)!\n\n"
-                     "✨ Weight Magic: 1 Kilogram (kg) = 1000 Grams (g)",
-            bgColor: Colors.blue.shade50,
+          _buildToyboxMission(
+            title: "How Heavy Is It? ⚖️",
+            child: const InteractiveWeightScale(),
             borderColor: Colors.blueAccent,
-            bottomChild: _buildWeightScaleDiagram(),
           ),
-
-          // ৩. তরল পরিমাপ
-          AnimatedLearnCard(
-            title: "3. Capacity (কতটা তরল ধরবে?) 🧪",
-            content: "Capacity tells us how much LIQUID a container can hold! "
-                     "For a few drops (like medicine), we use Milliliters (ml). "
-                     "For big bottles (like a water bottle), we use Liters (l)!\n\n"
-                     "✨ Liquid Magic: 1 Liter (l) = 1000 Milliliters (ml)",
-            bgColor: Colors.purple.shade50,
-            borderColor: Colors.purple,
-            bottomChild: _buildCapacityLiquidDiagram(),
+          _buildToyboxMission(
+            title: "Liquid Color Mixer! 🧪",
+            child: const InteractiveCapacityFlask(),
+            borderColor: Colors.purpleAccent,
           ),
-          
-          const SizedBox(height: 30),
         ],
       ),
     );
   }
 
-  // কার্টুন রোবট গাইড মাসকট উইজেট
-  Widget _buildHeaderMascot() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(25),
-        boxShadow: [BoxShadow(color: Colors.teal.withOpacity(0.1), blurRadius: 10, offset: const Offset(0, 4))],
-        border: Border.all(color: Colors.teal.withOpacity(0.2), width: 2),
+  Widget _buildToyboxMission({required String title, required Widget child, required Color borderColor}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: borderColor, width: 3),
+          boxShadow: [
+            BoxShadow(
+              color: borderColor.withOpacity(0.08),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            )
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              title,
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: borderColor),
+            ),
+            const SizedBox(height: 20),
+            Expanded(
+              child: Center(
+                child: SingleChildScrollView(child: child),
+              ),
+            ),
+          ],
+        ),
       ),
-      child: Row(
+    );
+  }
+}
+
+// --- MODULE 1: INTERACTIVE LENGTH LAB ---
+class InteractiveLengthRuler extends StatefulWidget {
+  const InteractiveLengthRuler({super.key});
+
+  @override
+  State<InteractiveLengthRuler> createState() => _InteractiveLengthRulerState();
+}
+
+class _InteractiveLengthRulerState extends State<InteractiveLengthRuler> {
+  String selectedObject = "Pencil ✏️";
+  double objectSize = 6.0;
+  String unit = "cm";
+
+  void changeObject(String name, double baseSize, String currentUnit) {
+    setState(() {
+      selectedObject = name;
+      objectSize = baseSize;
+      unit = currentUnit;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 250,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          const Text("🤖", style: TextStyle(fontSize: 50)),
-          const SizedBox(width: 15),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: const [
-                Text("Measurement Station! 🚀", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.teal)),
-                SizedBox(height: 2),
-                Text("Let's measure length, weight, and capacity!", style: TextStyle(fontSize: 13, color: Colors.black54, fontWeight: FontWeight.w600)),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(color: Colors.orange.shade50, borderRadius: BorderRadius.circular(16)),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(selectedObject.split(" ").last, style: const TextStyle(fontSize: 32)),
+                const SizedBox(width: 12),
+                Text(
+                  "${objectSize.toInt()} $unit",
+                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: Colors.orange),
+                ),
               ],
             ),
           ),
-        ],
-      ),
-    );
-  }
-
-  // ১ নম্বর কার্ড: রুলার বা স্কেল ডায়াগ্রাম (LayoutBuilder সহ পারফেক্টলি অ্যালাইনড)
-  Widget _buildLengthRulerDiagram() {
-    return Container(
-      margin: const EdgeInsets.only(top: 15),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [BoxShadow(color: Colors.orange.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))],
-      ),
-      child: Column(
-        children: [
-          // কাস্টম পেন্সিল গ্রাফিক্স
-          Row(
-            children: [
-              const SizedBox(width: 15), // স্কেলের '০' এর চিহ্নের সাথে মিলানোর জন্য স্পেস
-              Expanded(
-                child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    // মোট স্কেলের ১০ ভাগের ৭ ভাগ জায়গা জুড়ে পেন্সিলটি থাকবে (৭ সেমি বোঝাতে)
-                    double pencilWidth = constraints.maxWidth * (7 / 10);
-                    return Align(
-                      alignment: Alignment.centerLeft,
-                      child: Container(
-                        width: pencilWidth,
-                        height: 14,
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(colors: [Colors.amber, Colors.orangeAccent]),
-                          borderRadius: const BorderRadius.only(topLeft: Radius.circular(4), bottomLeft: Radius.circular(4)),
-                          border: Border.all(color: Colors.orange.shade700, width: 1.5),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            // পেন্সিলের কিউট ইরেজার অংশ (পেছনে)
-                            Container(width: 8, color: Colors.pinkAccent),
-                          ],
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ),
-              const SizedBox(width: 10),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(color: Colors.orange.shade100, borderRadius: BorderRadius.circular(8)),
-                child: const Text(
-                  "✏️ 7 cm",
-                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.orange),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-
-          // রিয়েল কার্টুন স্কেল ডিজাইন (০ থেকে ১০ নম্বর দাগ সহ)
+          const SizedBox(height: 16),
           Container(
-            height: 45,
+            height: 40,
             decoration: BoxDecoration(
               color: Colors.amber.shade50,
               border: Border.all(color: Colors.orange.shade200, width: 2),
               borderRadius: BorderRadius.circular(12),
-              boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(0, 2))],
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -168,19 +162,11 @@ class _MeasurementLearnScreenState extends State<MeasurementLearnScreen> {
                 return Column(
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: [
-                    Container(
-                      height: isMajor ? 14 : 7,
-                      width: 2,
-                      color: Colors.brown.shade600,
-                    ),
+                    Container(height: isMajor ? 12 : 6, width: 2, color: Colors.brown.shade600),
                     const Spacer(),
                     Text(
-                      "$index",
-                      style: TextStyle(
-                        fontSize: isMajor ? 11 : 9,
-                        fontWeight: isMajor ? FontWeight.w900 : FontWeight.bold,
-                        color: isMajor ? Colors.brown.shade800 : Colors.brown.shade400,
-                      ),
+                      "${(index * (objectSize / 10)).toInt()}",
+                      style: TextStyle(fontSize: 9, fontWeight: FontWeight.w900, color: Colors.brown.shade700),
                     ),
                     const SizedBox(height: 2),
                   ],
@@ -188,159 +174,234 @@ class _MeasurementLearnScreenState extends State<MeasurementLearnScreen> {
               }),
             ),
           ),
-        ],
-      ),
-    );
-  }
-
-  // ২ নম্বর কার্ড: ওজন মাপার স্কেল ডায়াগ্রাম
-  Widget _buildWeightScaleDiagram() {
-    return Container(
-      margin: const EdgeInsets.only(top: 12),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Text("🍎", style: TextStyle(fontSize: 26)),
-          const SizedBox(width: 8),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-            decoration: BoxDecoration(color: Colors.blue.shade100, borderRadius: BorderRadius.circular(12)),
-            child: const Text(
-              "Weight = 200 g",
-              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w900, color: Colors.blueAccent),
-            ),
-          ),
-          const SizedBox(width: 8),
-          const Text("⚖️", style: TextStyle(fontSize: 26)),
-        ],
-      ),
-    );
-  }
-
-  // ৩ নম্বর কার্ড: তরল পরিমাপের বিকার ডায়াগ্রাম (ফিক্সড)
-  Widget _buildCapacityLiquidDiagram() {
-    return Container(
-      margin: const EdgeInsets.only(top: 12),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Stack(
-            alignment: Alignment.bottomCenter,
+          const SizedBox(height: 20),
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            alignment: WrapAlignment.center,
             children: [
-              Container(
-                height: 50,
-                width: 35,
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.purple.shade300, width: 2),
-                  borderRadius: BorderRadius.circular(4),
-                ),
-              ),
-              Container(
-                height: 35,
-                width: 31,
-                margin: const EdgeInsets.only(bottom: 2, left: 2, right: 2),
-                color: Colors.purple.shade200,
-              ),
+              _buildObjectBtn("Ant 🐜", 5.0, "mm"),
+              _buildObjectBtn("Pencil ✏️", 15.0, "cm"),
+              _buildObjectBtn("Car 🚗", 4.0, "m"),
+              _buildObjectBtn("Rocket 🚀", 300.0, "m"),
             ],
           ),
-          const SizedBox(width: 15),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-            decoration: BoxDecoration(color: Colors.purple.shade50, borderRadius: BorderRadius.circular(12)),
-            child: const Text(
-              "Capacity = 1 Liter (l)",
-              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w900, color: Colors.purple),
-            ),
-          ),
         ],
       ),
     );
   }
+
+  Widget _buildObjectBtn(String name, double size, String u) {
+    bool isSelected = selectedObject == name;
+    return ElevatedButton(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: isSelected ? Colors.orange : Colors.grey.shade200,
+        foregroundColor: isSelected ? Colors.white : Colors.black87,
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      ),
+      onPressed: () => changeObject(name, size, u),
+      child: Text(name, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 12)),
+    );
+  }
 }
 
-// অল-প্ল্যাটফর্ম রেসপন্সিভ হোভার অ্যানিমেটেড লার্ন কার্ড উইজেট
-class AnimatedLearnCard extends StatefulWidget {
-  final String title;
-  final String content;
-  final Color bgColor;
-  final Color borderColor;
-  final Widget? bottomChild;
-
-  const AnimatedLearnCard({
-    super.key,
-    required this.title,
-    required this.content,
-    required this.bgColor,
-    required this.borderColor,
-    this.bottomChild,
-  });
+// --- MODULE 2: INTERACTIVE WEIGHT SCALE ---
+class InteractiveWeightScale extends StatefulWidget {
+  const InteractiveWeightScale({super.key});
 
   @override
-  State<AnimatedLearnCard> createState() => _AnimatedLearnCardState();
+  State<InteractiveWeightScale> createState() => _InteractiveWeightScaleState();
 }
 
-class _AnimatedLearnCardState extends State<AnimatedLearnCard> {
-  bool _isHovered = false;
-  bool _isPressed = false;
+class _InteractiveWeightScaleState extends State<InteractiveWeightScale> {
+  String selectedItem = "Apple 🍎";
+  String calculatedWeightText = "200 Grams (g)";
+
+  void switchWeight(String entryName, String balanceMetricText) {
+    setState(() {
+      selectedItem = entryName;
+      calculatedWeightText = balanceMetricText;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    double transformY = _isPressed ? 2.0 : (_isHovered ? -6.0 : 0.0);
-    double scale = _isPressed ? 0.98 : (_isHovered ? 1.02 : 1.0);
-
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      onEnter: (_) => setState(() => _isHovered = true),
-      onExit: (_) => setState(() {
-        _isHovered = false;
-        _isPressed = false;
-      }),
-      child: GestureDetector(
-        onTapDown: (_) => setState(() => _isPressed = true),
-        onTapUp: (_) => setState(() => _isPressed = false),
-        onTapCancel: () => setState(() => _isPressed = false),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          curve: Curves.easeOutCubic,
-          margin: const EdgeInsets.only(bottom: 20),
-          padding: const EdgeInsets.all(18),
-          transform: Matrix4.identity()..translate(0.0, transformY)..scale(scale),
-          decoration: BoxDecoration(
-            color: widget.bgColor,
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: _isHovered ? widget.borderColor : widget.borderColor.withOpacity(0.4), width: _isHovered ? 3 : 2),
-            boxShadow: [
-              BoxShadow(
-                color: widget.borderColor.withOpacity(_isHovered ? 0.2 : 0.06),
-                blurRadius: _isHovered ? 14.0 : 4.0,
-                offset: Offset(0, _isHovered ? 6.0 : 2.0),
+    return SizedBox(
+      width: 250,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.blue.shade50,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: Colors.blueAccent.withOpacity(0.3), width: 2),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 200),
+                  child: Text(
+                    selectedItem.split(" ").last, 
+                    key: ValueKey<String>(selectedItem),
+                    style: const TextStyle(fontSize: 32),
+                  ),
+                ),
+                const SizedBox(width: 14),
+                const Text("⚖️", style: TextStyle(fontSize: 32)),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            calculatedWeightText,
+            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: Colors.blueAccent),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: selectedItem.contains("Apple") ? Colors.blueAccent : Colors.grey.shade200,
+                  foregroundColor: selectedItem.contains("Apple") ? Colors.white : Colors.black87,
+                ),
+                onPressed: () => switchWeight("Apple 🍎", "200 Grams (g)"),
+                child: const Text("Apple 🍎", style: TextStyle(fontWeight: FontWeight.w900, fontSize: 11)),
+              ),
+              const SizedBox(width: 8),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: selectedItem.contains("Bag") ? Colors.blueAccent : Colors.grey.shade200,
+                  foregroundColor: selectedItem.contains("Bag") ? Colors.white : Colors.black87,
+                ),
+                onPressed: () => switchWeight("Bag 🎒", "3 Kilograms (kg)"),
+                child: const Text("Bag 🎒", style: TextStyle(fontWeight: FontWeight.w900, fontSize: 11)),
               ),
             ],
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+        ],
+      ),
+    );
+  }
+}
+
+// --- MODULE 3: UPGRADED ACCURATE COLOR LIQUID MIXER LAB ---
+class InteractiveCapacityFlask extends StatefulWidget {
+  const InteractiveCapacityFlask({super.key});
+
+  @override
+  State<InteractiveCapacityFlask> createState() => _InteractiveCapacityFlaskState();
+}
+
+class _InteractiveCapacityFlaskState extends State<InteractiveCapacityFlask> {
+  int liquidVolumeMl = 500;
+  Color liquidColor = Colors.blueAccent;
+  String liquidName = "Water 💧";
+  String containerName = "Bottle 🍼";
+
+  // 🛠️ Handles dynamic context calculation changes for both exact volumes, liquid colors, and can styles
+  void fillLiquid(String name, Color shade, int amount, String containerType) {
+    setState(() {
+      liquidName = name;
+      liquidColor = shade;
+      liquidVolumeMl = amount;
+      containerName = containerType;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // Maps the fluid filling ratios nicely on mobile displays
+    double scaleHeightFactor = (liquidVolumeMl / 1000) * 85;
+    if (liquidVolumeMl == 5) scaleHeightFactor = 12.0; // Medicine spoon minimum bump visibility
+
+    return SizedBox(
+      width: 250,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Graphic Glass Cylinder Beaker Block
+          Stack(
+            alignment: Alignment.bottomCenter,
+            children: [
+              // Outer glass line container
+              Container(
+                height: 95,
+                width: 65,
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.purple.shade300, width: 3),
+                  borderRadius: const BorderRadius.only(
+                    bottomLeft: Radius.circular(12),
+                    bottomRight: Radius.circular(12),
+                  ),
+                ),
+              ),
+              // 🎨 Dynamic color fluid height indicator matching button properties
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 300),
+                height: scaleHeightFactor,
+                width: 59,
+                margin: const EdgeInsets.all(3),
+                decoration: BoxDecoration(
+                  color: liquidColor,
+                  borderRadius: BorderRadius.circular(6),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Text(
+            liquidVolumeMl == 1000 ? "1 Liter (1000 ml)" : "$liquidVolumeMl ml",
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: liquidColor == const Color(0xFFF5F5F5) ? Colors.blueGrey : liquidColor),
+          ),
+          Text(
+            "Container: $containerName ($liquidName)",
+            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.black54),
+          ),
+          const SizedBox(height: 20),
+          // Interactive Fluid Injection Buttons (4 Distinct Color & Can Layout Types)
+          Column(
             children: [
               Row(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Expanded(child: Text(widget.title, style: TextStyle(fontSize: 19, fontWeight: FontWeight.bold, color: widget.borderColor))),
-                  AnimatedOpacity(
-                    duration: const Duration(milliseconds: 200),
-                    opacity: _isHovered ? 1.0 : 0.3,
-                    child: Text("⭐", style: TextStyle(fontSize: _isHovered ? 21 : 16)),
-                  ),
+                  _buildLiquidSelector("Syrup 🧪", const Color(0xFF9C27B0), 5, "Spoon 🥄"), // Purple fluid
+                  const SizedBox(width: 8),
+                  _buildLiquidSelector("Juice 🧃", const Color(0xFFFF9800), 250, "Juice Box 📦"), // Orange fluid
                 ],
               ),
-              const SizedBox(height: 6),
-              Text(widget.content, style: const TextStyle(fontSize: 15, height: 1.4, color: Colors.black87, fontWeight: FontWeight.w500)),
-              if (widget.bottomChild != null) widget.bottomChild!,
+              const SizedBox(height: 8),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  _buildLiquidSelector("Water 💧", const Color(0xFF03A9F4), 500, "Bottle 🍼"), // Sky blue fluid
+                  const SizedBox(width: 8),
+                  _buildLiquidSelector("Milk 🥛", const Color(0xFFE0E0E0), 1000, "Big Can 🪣"), // Milky off-white fluid
+                ],
+              ),
             ],
-          ),
-        ),
+          )
+        ],
       ),
+    );
+  }
+
+  Widget _buildLiquidSelector(String name, Color color, int amount, String containerType) {
+    bool isSelected = liquidName == name;
+    return ElevatedButton(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: isSelected ? (color == const Color(0xFFE0E0E0) ? Colors.grey.shade400 : color) : Colors.grey.shade100,
+        foregroundColor: isSelected ? (color == const Color(0xFFE0E0E0) ? Colors.black87 : Colors.white) : Colors.black87,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        elevation: isSelected ? 3 : 1,
+      ),
+      onPressed: () => fillLiquid(name, color, amount, containerType),
+      child: Text(name, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 12)),
     );
   }
 }

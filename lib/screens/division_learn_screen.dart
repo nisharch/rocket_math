@@ -7,350 +7,423 @@ class DivisionLearnScreen extends StatefulWidget {
   State<DivisionLearnScreen> createState() => _DivisionLearnScreenState();
 }
 
-class _DivisionLearnScreenState extends State<DivisionLearnScreen> {
+class _DivisionLearnScreenState extends State<DivisionLearnScreen> with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 4, vsync: this);
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.cyan.shade50,
+      backgroundColor: Colors.amber.shade50, // Playful bright toybox canvas
       appBar: AppBar(
-        title: const Text("➗ Division Orbit"),
+        title: const Text("➗ Division Orbit Lab", style: TextStyle(fontWeight: FontWeight.w900, fontSize: 18)),
         backgroundColor: Colors.cyan.shade700,
         foregroundColor: Colors.white,
-        elevation: 4,
+        elevation: 2,
+        bottom: TabBar(
+          controller: _tabController,
+          indicatorColor: Colors.white,
+          labelColor: Colors.white,
+          unselectedLabelColor: Colors.white70,
+          isScrollable: true,
+          labelStyle: const TextStyle(fontWeight: FontWeight.w900, fontSize: 13),
+          tabs: const [
+            Tab(text: "🍪 Step 1"),
+            Tab(text: "🤝 Step 2"),
+            Tab(text: "👣 Step 3"),
+            Tab(text: "⚡ Step 4"),
+          ],
+        ),
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(20),
+      body: TabBarView(
+        controller: _tabController,
         children: [
-          // কার্টুন রোবট গাইড মাসকট
-          _buildHeaderMascot(),
-          const SizedBox(height: 20),
-
-          // ১. ভাগের বেসিক কনসেপ্ট
-          AnimatedLearnCard(
-            title: "1. What is Division? 🍕",
-            content: "Division means sharing or dividing into EQUAL groups! "
-                     "We use the Divide (÷) sign, and the final answer is called Quotient! ✨",
-            bgColor: Colors.blue.shade50,
+          _buildToyboxMission(
+            title: "Sharing Equally! 🍪",
+            child: const InteractiveCookieSharer(),
             borderColor: Colors.blueAccent,
-            bottomChild: _buildEqualSharingDiagram(),
           ),
-
-          // ২. ভাগের ৪টি বিশেষ বন্ধু (আপনার স্ক্রিনশট অনুযায়ী স্ট্যান্ডার্ড ফরম্যাট)
-          AnimatedLearnCard(
-            title: "2. Meet the Division Friends! 🤝",
-            content: "Look at the standard long division layout below to remember their names!",
-            bgColor: Colors.white,
+          _buildToyboxMission(
+            title: "Meet the Division Friends! 🤝",
+            child: const InteractiveDivisionFriends(),
             borderColor: Colors.cyan.shade700,
-            bottomChild: _buildStandardDivisionFriendsDiagram(),
           ),
-
-          // ৩. সাধারণ ভাগ (Simple Division - No Remainder)
-          AnimatedLearnCard(
-            title: "3. Simple Division 👣",
-            content: "Let's divide 6 ÷ 2. Think of your 2 times table! "
-                     "How many times 2 goes into 6? 2 × 3 = 6!\n\n"
-                     "🎉 So, the Quotient is 3!",
-            bgColor: Colors.orange.shade50,
+          _buildToyboxMission(
+            title: "Simple Division Engine! 👣",
+            child: const InteractiveSimpleDivGrid(),
             borderColor: Colors.orange,
-            bottomChild: _buildSimpleDivDiagram(),
           ),
-
-          // ৪. ভাগশেষ সহ ভাগ (আপনার দেওয়া ২৫ ÷ ২ এর এক্সাক্ট লং ডিভিশন উদাহরণ)
-          AnimatedLearnCard(
-            title: "4. Remaining Leftovers! ⚡",
-            content: "Let's divide 25 ÷ 2 step-by-step using Long Division!\n\n"
-                     "• Step 1: Look at 2. 2 × 1 = 2. Subtract 2 − 2 = 0. Bring down 5.\n"
-                     "• Step 2: Look at 5. 2 × 2 = 4. Subtract 5 − 4 = 1.\n\n"
-                     "🚀 Quotient is 12 and Remainder is 1!",
-            bgColor: Colors.purple.shade50,
+          _buildToyboxMission(
+            title: "Long Division Machine! ⚡",
+            child: const InteractiveLongDivisionMachine(),
             borderColor: Colors.purple,
-            bottomChild: _buildLongDivisionExampleDiagram(),
-          ),
-          
-          const SizedBox(height: 30),
-        ],
-      ),
-    );
-  }
-
-  // কার্টুন রোবট গাইড মাসকট উইজেট
-  Widget _buildHeaderMascot() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(25),
-        boxShadow: [BoxShadow(color: Colors.cyan.withOpacity(0.1), blurRadius: 10, offset: const Offset(0, 4))],
-        border: Border.all(color: Colors.cyan.withOpacity(0.2), width: 2),
-      ),
-      child: Row(
-        children: [
-          const Text("🤖", style: TextStyle(fontSize: 50)),
-          const SizedBox(width: 15),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text("Division Station! 🚀", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.cyan.shade700)),
-                const SizedBox(height: 2),
-                const Text("Let's share cookies and numbers equally!", style: TextStyle(fontSize: 13, color: Colors.black54, fontWeight: FontWeight.w600)),
-              ],
-            ),
           ),
         ],
       ),
     );
   }
 
-  // পিৎজা ইমোজি ডায়াগ্রাম
-  Widget _buildEqualSharingDiagram() {
-    return Container(
-      margin: const EdgeInsets.only(top: 12),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
-      width: double.infinity,
-      child: Center(
+  Widget _buildToyboxMission({required String title, required Widget child, required Color borderColor}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: borderColor, width: 3),
+          boxShadow: [
+            BoxShadow(
+              color: borderColor.withOpacity(0.08),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            )
+          ],
+        ),
         child: Column(
-          children: const [
-            Text("🍕🍕   ➕   🍕🍕   ➕   🍕🍕", style: TextStyle(fontSize: 16)),
-            SizedBox(height: 6),
-            Text("6 Slices shared into 3 equal groups = 2 each!", style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.blueAccent)),
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              title,
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: borderColor),
+            ),
+            const SizedBox(height: 20),
+            Expanded(
+              child: Center(
+                child: SingleChildScrollView(child: child),
+              ),
+            ),
           ],
         ),
       ),
     );
   }
-
-  // ২ নম্বর কার্ড: স্ট্যান্ডার্ড লং ডিভিশন লেবেলিং মানচিত্র (স্ক্রিনশট ফরম্যাট)
-  Widget _buildStandardDivisionFriendsDiagram() {
-    return Container(
-      margin: const EdgeInsets.only(top: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.cyan.shade50.withOpacity(0.5),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.cyan.withOpacity(0.2)),
-      ),
-      child: Column(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const SizedBox(width: 45),
-              Text("12", style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: Colors.cyan.shade900)), // Quotient
-              const Text("  ⬅️ Quotient (Answer)", style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.black54)),
-            ],
-          ),
-          Container(margin: const EdgeInsets.only(left: 45, top: 2, bottom: 2), height: 2, width: 60, color: Colors.black87),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Text("Divisor ➡️  ", style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.blue)),
-              const Text("2 ", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.blue)), // Divisor
-              const Text(") ", style: TextStyle(fontSize: 22, color: Colors.black54)),
-              const Text("25", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.redAccent)), // Dividend
-              const Text("  ⬅️ Dividend (Total)", style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.redAccent)),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: const [
-              SizedBox(width: 35),
-              Text("1", style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: Colors.purple)), // Remainder
-              Text("  ⬅️ Remainder (Leftover)", style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.purple)),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ৩ নম্বর কার্ড: সাধারণ ভাগ (6 ÷ 2 = 3)
-  Widget _buildSimpleDivDiagram() {
-    return Container(
-      margin: const EdgeInsets.only(top: 12),
-      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 25),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(18)),
-      child: Column(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text("3", style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: Colors.orange.shade700)),
-            ],
-          ),
-          Container(margin: const EdgeInsets.symmetric(vertical: 2), height: 2, width: 50, color: Colors.black38),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: const [
-              Text("2 ) ", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.blue)),
-              Text("6", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-            ],
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: const [
-              SizedBox(width: 24),
-              Text("−6", style: TextStyle(fontSize: 18, color: Colors.black54)),
-            ],
-          ),
-          Container(margin: const EdgeInsets.symmetric(vertical: 2), height: 1.5, width: 50, color: Colors.black87),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: const [
-              SizedBox(width: 24),
-              Text("0", style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: Colors.green)),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ৪ নম্বর কার্ড: আপনার ছবি অনুযায়ী একদম নিখুঁত লং ডিভিশন প্রসেস (25 ÷ 2)
-  Widget _buildLongDivisionExampleDiagram() {
-    return Container(
-      margin: const EdgeInsets.only(top: 12),
-      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 25),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.purple.withOpacity(0.2), width: 1.5),
-      ),
-      child: Column(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: const [
-              SizedBox(width: 28),
-              Text("12", style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: Colors.purple)), // Quotient
-            ],
-          ),
-          Container(margin: const EdgeInsets.only(left: 28, top: 2, bottom: 2), height: 2, width: 50, color: Colors.black38),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: const [
-              Text("2 ) ", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.blue)), // Divisor
-              Text("25", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.redAccent)), // Dividend
-            ],
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: const [
-              SizedBox(width: 15),
-              Text("−2", style: TextStyle(fontSize: 18, color: Colors.black54)),
-              SizedBox(width: 15),
-            ],
-          ),
-          Container(margin: const EdgeInsets.only(left: 28, top: 2, bottom: 2), height: 1.5, width: 50, color: Colors.black38),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: const [
-              SizedBox(width: 28),
-              Text("05", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black87)),
-            ],
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: const [
-              SizedBox(width: 28),
-              Text("−4", style: TextStyle(fontSize: 18, color: Colors.black54)),
-            ],
-          ),
-          Container(margin: const EdgeInsets.only(left: 28, top: 2, bottom: 2), height: 1.5, width: 50, color: Colors.black87),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: const [
-              SizedBox(width: 28),
-              Text("1", style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: Colors.red)), // Remainder
-            ],
-          ),
-        ],
-      ),
-    );
-  }
 }
 
-// অল-প্ল্যাটফর্ম রেসপন্সিভ হোভার অ্যানিমেটেড লার্ন কার্ড উইজেট
-class AnimatedLearnCard extends StatefulWidget {
-  final String title;
-  final String content;
-  final Color bgColor;
-  final Color borderColor;
-  final Widget? bottomChild;
-
-  const AnimatedLearnCard({
-    super.key,
-    required this.title,
-    required this.content,
-    required this.bgColor,
-    required this.borderColor,
-    this.bottomChild,
-  });
+// --- MODULE 1: INTERACTIVE COOKIE SHARER ---
+class InteractiveCookieSharer extends StatefulWidget {
+  const InteractiveCookieSharer({super.key});
 
   @override
-  State<AnimatedLearnCard> createState() => _AnimatedLearnCardState();
+  State<InteractiveCookieSharer> createState() => _InteractiveCookieSharerState();
 }
 
-class _AnimatedLearnCardState extends State<AnimatedLearnCard> {
-  bool _isHovered = false;
-  bool _isPressed = false;
+class _InteractiveCookieSharerState extends State<InteractiveCookieSharer> {
+  int totalCookies = 6;
 
   @override
   Widget build(BuildContext context) {
-    double transformY = _isPressed ? 2.0 : (_isHovered ? -6.0 : 0.0);
-    double scale = _isPressed ? 0.98 : (_isHovered ? 1.02 : 1.0);
+    int cookiesPerGroup = (totalCookies / 2).floor();
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Wrap(
+          alignment: WrapAlignment.center,
+          children: List.generate(totalCookies, (index) => const Text("🍪", style: TextStyle(fontSize: 26))),
+        ),
+        const SizedBox(height: 16),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+          decoration: BoxDecoration(color: Colors.blue.shade50, borderRadius: BorderRadius.circular(12)),
+          child: Text(
+            "$totalCookies Cookies ÷ 2 Groups = $cookiesPerGroup Each!",
+            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w900, color: Colors.blueAccent),
+          ),
+        ),
+        const SizedBox(height: 12),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            IconButton(
+              icon: const Icon(Icons.remove_circle, color: Colors.blueAccent, size: 36),
+              onPressed: totalCookies > 2 ? () => setState(() => totalCookies -= 2) : null,
+            ),
+            const SizedBox(width: 16),
+            IconButton(
+              icon: const Icon(Icons.add_circle, color: Colors.blueAccent, size: 36),
+              onPressed: totalCookies < 8 ? () => setState(() => totalCookies += 2) : null,
+            ),
+          ],
+        )
+      ],
+    );
+  }
+}
 
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      onEnter: (_) => setState(() => _isHovered = true),
-      onExit: (_) => setState(() {
-        _isHovered = false;
-        _isPressed = false;
-      }),
-      child: GestureDetector(
-        onTapDown: (_) => setState(() => _isPressed = true),
-        onTapUp: (_) => setState(() => _isPressed = false),
-        onTapCancel: () => setState(() => _isPressed = false),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          curve: Curves.easeOutCubic,
-          margin: const EdgeInsets.only(bottom: 20),
-          padding: const EdgeInsets.all(18),
-          transform: Matrix4.identity()..translate(0.0, transformY)..scale(scale),
-          decoration: BoxDecoration(
-            color: widget.bgColor,
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: _isHovered ? widget.borderColor : widget.borderColor.withOpacity(0.4), width: _isHovered ? 3 : 2),
-            boxShadow: [
-              BoxShadow(
-                color: widget.borderColor.withOpacity(_isHovered ? 0.2 : 0.06),
-                blurRadius: _isHovered ? 14.0 : 4.0,
-                offset: Offset(0, _isHovered ? 6.0 : 2.0),
-              ),
+// --- MODULE 2: INTERACTIVE DIVISION FRIENDS MAP ---
+class InteractiveDivisionFriends extends StatefulWidget {
+  const InteractiveDivisionFriends({super.key});
+
+  @override
+  State<InteractiveDivisionFriends> createState() => _InteractiveDivisionFriendsState();
+}
+
+class _InteractiveDivisionFriendsState extends State<InteractiveDivisionFriends> {
+  String highlightedFriend = "Tap a button below!";
+  Color highlightColor = Colors.grey;
+
+  void updateLabel(String name, Color color) {
+    setState(() {
+      highlightedFriend = name;
+      highlightColor = color;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 250,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.cyan.shade50,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: Colors.cyan.shade200, width: 2),
+            ),
+            child: Column(
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const SizedBox(width: 30),
+                    Text("12", style: TextStyle(fontSize: 26, fontWeight: FontWeight.w900, color: highlightedFriend.contains("Quotient") ? Colors.cyan.shade800 : Colors.black87)),
+                  ],
+                ),
+                Container(margin: const EdgeInsets.symmetric(vertical: 4), height: 3, width: 60, color: Colors.black45),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text("2 ", style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: highlightedFriend.contains("Divisor") ? Colors.blue : Colors.black87)),
+                    const Text(") ", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.black45)),
+                    Text("25", style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: highlightedFriend.contains("Dividend") ? Colors.redAccent : Colors.black87)),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Text("1", style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: highlightedFriend.contains("Remainder") ? Colors.purple : Colors.black38)),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 150),
+            padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
+            decoration: BoxDecoration(color: highlightColor.withOpacity(0.15), borderRadius: BorderRadius.circular(10)),
+            child: Text(highlightedFriend, style: TextStyle(fontWeight: FontWeight.w900, color: highlightColor, fontSize: 13), textAlign: TextAlign.center),
+          ),
+          const SizedBox(height: 14),
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            alignment: WrapAlignment.center,
+            children: [
+              _buildBuddyButton("Dividend", "🔴 Total amount inside", Colors.redAccent),
+              _buildBuddyButton("Divisor", "🔵 Number of groups", Colors.blue),
+              _buildBuddyButton("Quotient", "🟢 Answer on top", Colors.cyan.shade800),
+              _buildBuddyButton("Remainder", "🟣 Leftovers at bottom", Colors.purple),
             ],
+          )
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBuddyButton(String label, String details, Color color) {
+    return ElevatedButton(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: color,
+        foregroundColor: Colors.white,
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      ),
+      onPressed: () => updateLabel("$label: $details", color),
+      child: Text(label, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 12)),
+    );
+  }
+}
+
+// --- MODULE 3: COMPACT SIMPLE DIVISION GRID ---
+class InteractiveSimpleDivGrid extends StatefulWidget {
+  const InteractiveSimpleDivGrid({super.key});
+
+  @override
+  State<InteractiveSimpleDivGrid> createState() => _InteractiveSimpleDivGridState();
+}
+
+class _InteractiveSimpleDivGridState extends State<InteractiveSimpleDivGrid> {
+  bool showAnswer = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(showAnswer ? "3" : "?", style: TextStyle(fontSize: 28, fontWeight: FontWeight.w900, color: showAnswer ? Colors.orange : Colors.grey.shade300)),
+          ],
+        ),
+        Container(margin: const EdgeInsets.symmetric(vertical: 4), height: 3, width: 60, color: Colors.black26),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: const [
+            Text("2 ) ", style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: Colors.blue)),
+            Text("6", style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900)),
+          ],
+        ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(showAnswer ? "−6" : "−?", style: TextStyle(fontSize: 22, color: showAnswer ? Colors.black45 : Colors.grey.shade200)),
+          ],
+        ),
+        Container(margin: const EdgeInsets.symmetric(vertical: 4), height: 2, width: 60, color: Colors.black26),
+        Text(showAnswer ? "0" : "?", style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: showAnswer ? Colors.green : Colors.grey.shade300)),
+        const SizedBox(height: 20),
+        ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.orange,
+            foregroundColor: Colors.white,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+          onPressed: () => setState(() => showAnswer = !showAnswer),
+          child: Text(showAnswer ? "Hide Steps" : "Calculate 6 ÷ 2! 👣", style: const TextStyle(fontWeight: FontWeight.w900)),
+        ),
+      ],
+    );
+  }
+}
+
+// --- MODULE 4: RESPONSIVE LONG DIVISION ENGINE (🛠️ FIX: Converted to StatelessWidget) ---
+class InteractiveLongDivisionMachine extends StatelessWidget {
+  const InteractiveLongDivisionMachine({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const SizedBox(
+      width: 250,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          InteractiveLongDivisionGrid(),
+        ],
+      ),
+    );
+  }
+}
+
+class InteractiveLongDivisionGrid extends StatefulWidget {
+  const InteractiveLongDivisionGrid({super.key});
+
+  @override
+  State<InteractiveLongDivisionGrid> createState() => _InteractiveLongDivisionGridState();
+}
+
+class _InteractiveLongDivisionGridState extends State<InteractiveLongDivisionGrid> {
+  int step = 0; // 0: clear, 1: step one, 2: complete
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+          decoration: BoxDecoration(
+            color: Colors.purple.shade50,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.purple.shade200, width: 2),
           ),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
             children: [
               Row(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Expanded(child: Text(widget.title, style: TextStyle(fontSize: 19, fontWeight: FontWeight.bold, color: widget.borderColor))),
-                  AnimatedOpacity(
-                    duration: const Duration(milliseconds: 200),
-                    opacity: _isHovered ? 1.0 : 0.3,
-                    child: Text("⭐", style: TextStyle(fontSize: _isHovered ? 21 : 16)),
-                  ),
+                  const SizedBox(width: 30),
+                  Text(step >= 1 ? "1" : "?", style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: step == 1 ? Colors.purple : Colors.black87)),
+                  Text(step == 2 ? "2" : "?", style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: step == 2 ? Colors.purple : Colors.black38)),
                 ],
               ),
-              const SizedBox(height: 6),
-              Text(widget.content, style: const TextStyle(fontSize: 15, height: 1.4, color: Colors.black87, fontWeight: FontWeight.w500)),
-              if (widget.bottomChild != null) widget.bottomChild!,
+              Container(margin: const EdgeInsets.symmetric(vertical: 4), height: 3, width: 60, color: Colors.black38),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: const [
+                  Text("2 ) ", style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: Colors.blue)),
+                  Text("25", style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: Colors.redAccent)),
+                ],
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(step >= 1 ? "−2 " : "−? ", style: TextStyle(fontSize: 20, color: step >= 1 ? Colors.black45 : Colors.grey.shade300)),
+                  const SizedBox(width: 15),
+                ],
+              ),
+              Container(margin: const EdgeInsets.symmetric(vertical: 2), height: 2, width: 60, color: Colors.black26),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const SizedBox(width: 25),
+                  Text(step >= 1 ? "0" : "?", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: step >= 1 ? Colors.black54 : Colors.grey.shade300)),
+                  Text(step >= 1 ? "5" : "?", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: step >= 1 ? Colors.black87 : Colors.grey.shade300)),
+                ],
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const SizedBox(width: 25),
+                  Text(step == 2 ? "−4" : "−?", style: TextStyle(fontSize: 20, color: step == 2 ? Colors.black45 : Colors.grey.shade300)),
+                ],
+              ),
+              Container(margin: const EdgeInsets.symmetric(vertical: 2), height: 2, width: 60, color: Colors.black26),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const SizedBox(width: 25),
+                  Text(step == 2 ? "1" : "?", style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: step == 2 ? Colors.purple : Colors.grey.shade300)),
+                ],
+              ),
             ],
           ),
         ),
-      ),
+        const SizedBox(height: 16),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: step == 1 ? Colors.purple : Colors.grey.shade200,
+                foregroundColor: step == 1 ? Colors.white : Colors.black87,
+              ),
+              onPressed: () => setState(() => step = 1),
+              child: const Text("Step 1", style: TextStyle(fontWeight: FontWeight.w900)),
+            ),
+            const SizedBox(width: 8),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: step == 2 ? Colors.purple : Colors.grey.shade200,
+                foregroundColor: step == 2 ? Colors.white : Colors.black87,
+              ),
+              onPressed: step >= 1 ? () => setState(() => step = 2) : null,
+              child: const Text("Step 2", style: TextStyle(fontWeight: FontWeight.w900)),
+            ),
+          ],
+        ),
+      ],
     );
   }
 }

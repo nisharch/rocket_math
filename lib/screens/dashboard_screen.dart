@@ -1,384 +1,747 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../models/student_model.dart';
-import '../state/shared_state.dart'; 
-import '../widgets/weak_topic_dashboard_card.dart';
-import 'unending_quiz_screen.dart'; 
+import '../services/quiz_service.dart';
+import 'unending_quiz_screen.dart';
+import 'global_quiz.dart'; // ← your new file
 
-class DashboardScreen extends StatefulWidget {
+class DashboardScreen extends StatelessWidget {
   final Student student;
-  const DashboardScreen({super.key, required this.student});
 
-  @override
-  State<DashboardScreen> createState() => _DashboardScreenState();
-}
+  const DashboardScreen({
+    super.key,
+    required this.student,
+  });
 
-class _DashboardScreenState extends State<DashboardScreen> with TickerProviderStateMixin {
-  late AnimationController _rocketController;
-  late Animation<double> _rocketAnimation;
-  late AnimationController _pulseController;
+  // ── Fetch Global Quiz stats doc for the current user ──────────
+  Stream<Map<String, dynamic>> _watchGlobalQuizStats() {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return const Stream.empty();
 
-  List<Map<String, dynamic>> activePerformances = [];
-  List<Map<String, dynamic>> recommendedMissions = [];
-  List<Map<String, dynamic>> strongMissions = [];
-
-  // ক্লাস ৩ এবং ক্লাস ৪ এর চ্যাপ্টার ফিল্টারিং লিস্ট ডিফাইন করা হলো
-  final List<String> class3Chapters = ["subtraction", "multiplication", "division", "measurement", "time", "money", "shapes"];
-  final List<String> class4Chapters = ["large numbers", "adv multiplication", "long division", "fractions", "perimeter area", "subtraction"];
-
-  @override
-  void initState() {
-    super.initState();
-    _loadAndAnalyzeData();
-
-    _rocketController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 2),
-    )..repeat(reverse: true);
-    
-    _rocketAnimation = Tween<double>(begin: -12, end: 12).animate(
-      CurvedAnimation(parent: _rocketController, curve: Curves.easeInOut),
-    );
-
-    _pulseController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1200),
-    )..repeat(reverse: true);
-  }
-
-  void _loadAndAnalyzeData() {
-    // ১. গ্লোবাল AppStateManager থেকে সব চ্যাপ্টারের আসল লাইভ ডাটা আনা হচ্ছে
-    List<Map<String, dynamic>> allPerformances = AppStateManager.getChapterPerformanceList();
-
-    // ২. বর্তমান স্টুডেন্টের সিলেক্ট করা ক্লাস (Class 3 নাকি Class 4) অনুযায়ী ডাটা ফিল্টার করা হচ্ছে
-    List<String> currentClassFilter = widget.student.selectedClass == 4 ? class4Chapters : class3Chapters;
-    
-    activePerformances = allPerformances.where((perf) {
-      return currentClassFilter.contains(perf["topic"].toLowerCase().trim());
-    }).toList();
-
-    // ৩. একিউরেসি (Accuracy) চেক করে শর্টিং করা হচ্ছে
-    List<Map<String, dynamic>> sortedByWeakness = List.from(activePerformances);
-    sortedByWeakness.sort((a, b) => a["accuracy"].compareTo(b["accuracy"]));
-
-    setState(() {
-      // একিউরেসি ৭৫% এর কম হলে মেরামত মিশন (Weak Chapters) এ সাজানো হবে
-      recommendedMissions = sortedByWeakness.where((e) => e["accuracy"] < 75.0).take(3).toList();
-      
-      // একিউরেসি ৭৫% বা তার বেশি হলে মাস্টার্ড সেকশন (Strong Chapters) এ যাবে
-      strongMissions = activePerformances.where((e) => e["accuracy"] >= 75.0).toList();
+    return FirebaseFirestore.instance
+        .collection('quiz_stats')
+        .doc(uid)
+        .snapshots()
+        .map((doc) {
+      if (!doc.exists) return {};
+      final data = doc.data() ?? {};
+      // The global quiz saves under key 'Global Quiz (Class 3 & 4)'
+      final raw = data['Global Quiz (Class 3 & 4)'];
+      if (raw == null) return {};
+      return Map<String, dynamic>.from(raw as Map);
     });
   }
 
   @override
-  void dispose() {
-    _rocketController.dispose();
-    _pulseController.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    int liveTotalXP = AppStateManager.getTotalXP();
-
     return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Color(0xFF0F0C29), Color(0xFF302B63), Color(0xFF24243E)],
-          ),
-        ),
-        child: SafeArea(
-          child: SingleChildScrollView(
+      backgroundColor: const Color(0xFFF4F7FE),
+      appBar: AppBar(
+        title: Text("🚀 Smart Dashboard • Class ${student.selectedClass}"),
+        backgroundColor: const Color(0xFF2F1B7A),
+        foregroundColor: Colors.white,
+        elevation: 0,
+      ),
+      body: StreamBuilder<List<Map<String, dynamic>>>(
+        stream: QuizService().watchWeakestChapters(),
+        builder: (context, snapshot) {
+          if (!snapshot.hasData) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          final chapters = snapshot.data!;
+
+          int totalCorrect = 0;
+          int totalWrong = 0;
+          for (var chapter in chapters) {
+            totalCorrect += chapter['correctAnswers'] as int;
+            totalWrong   += chapter['wrongAnswers']   as int;
+          }
+          int totalQuestions    = totalCorrect + totalWrong;
+          double overallAccuracy = totalQuestions == 0
+              ? 0
+              : (totalCorrect / totalQuestions) * 100;
+          int xp    = totalCorrect * 10;
+          int level = (xp ~/ 100) + 1;
+
+          // AI recommendation
+          String aiMessage = "Excellent progress Captain 🚀";
+          if (chapters.isNotEmpty) {
+            chapters.sort((a, b) =>
+                (a['averageAccuracy'] as double)
+                    .compareTo(b['averageAccuracy'] as double));
+            final weakest  = chapters.first;
+            double weakAcc = weakest['averageAccuracy'] * 100;
+            if (weakAcc < 40) {
+              aiMessage =
+                  "🚨 Critical: Practice ${weakest['chapterName']} immediately.";
+            } else if (weakAcc < 70) {
+              aiMessage =
+                  "🧠 AI Coach: Focus more on ${weakest['chapterName']}.";
+            }
+          }
+
+          final weakTopics   = chapters.where((c) => (c['averageAccuracy'] as double) * 100 < 70).toList();
+          final strongTopics = chapters.where((c) => (c['averageAccuracy'] as double) * 100 >= 85).toList();
+
+          return SingleChildScrollView(
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // কাস্টম অ্যাপ বার প্যানেল
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                  child: Row(
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
-                        onPressed: () => Navigator.pop(context), 
-                      ),
-                      const Spacer(),
-                      Text(
-                        "🛸 CLASS ${widget.student.selectedClass} METEOR DASHBOARD",
-                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900, letterSpacing: 1.2),
-                      ),
-                      const Spacer(),
-                      const SizedBox(width: 48), 
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 15),
+                const SizedBox(height: 20),
 
-                // অ্যানিমেটেড ফ্লোٹنگ রকেট
-                AnimatedBuilder(
-                  animation: _rocketAnimation,
-                  builder: (context, child) {
-                    return Transform.translate(
-                      offset: Offset(0, _rocketAnimation.value),
-                      child: child,
-                    );
-                  },
-                  child: const Text("🚀", style: TextStyle(fontSize: 80)),
-                ),
-                const SizedBox(height: 15),
-                
-                Text(
-                  "Captain ${widget.student.id == 'S1' ? 'Kid' : widget.student.id}'s Status",
-                  style: const TextStyle(color: Colors.white, fontSize: 26, fontWeight: FontWeight.w900),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  "Class ${widget.student.selectedClass} Space Explorer 🪐",
-                  style: const TextStyle(color: Colors.white70, fontSize: 16),
-                ),
-                const SizedBox(height: 25),
-
-                // ডায়নামিক এনার্জি এক্সপি (XP) কার্ড মডিউল
+                // ════════════════════════════════════════
+                // 🚀 PERFORMANCE OVERVIEW
+                // ════════════════════════════════════════
                 Container(
                   margin: const EdgeInsets.symmetric(horizontal: 20),
-                  padding: const EdgeInsets.all(22),
+                  padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    gradient: const LinearGradient(colors: [Color(0xFF00F260), Color(0xFF0575E6)]),
-                    borderRadius: BorderRadius.circular(30),
-                    border: Border.all(color: Colors.white, width: 2),
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF6C5CE7), Color(0xFF4834D4)]),
+                    borderRadius: BorderRadius.circular(24),
                   ),
-                  child: Row(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text("👑", style: TextStyle(fontSize: 45)),
-                      const SizedBox(width: 18),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                      const Text("🚀 Performance Overview",
+                          style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 20),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(
-                            "TOTAL ENERGY SCORE",
-                            style: TextStyle(
-                              color: const Color(0xFFEEEEEE).withOpacity(0.9),
-                              fontSize: 13,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 1,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            "$liveTotalXP XP", 
-                            style: const TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.w900),
-                          ),
+                          _buildStatItem("🎯", "$totalQuestions", "Questions"),
+                          _buildStatItem("✅", "$totalCorrect",   "Correct"),
+                          _buildStatItem("❌", "$totalWrong",     "Wrong"),
+                          _buildStatItem("⭐", "${overallAccuracy.toStringAsFixed(0)}%", "Accuracy"),
+                        ],
+                      ),
+                      const SizedBox(height: 24),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          _buildMiniCard("🔥 XP",    "$xp"),
+                          _buildMiniCard("🚀 Level", "$level"),
+                          _buildMiniCard("🏆 Rank",
+                              level >= 10 ? "Master" : level >= 5 ? "Pro" : "Beginner"),
                         ],
                       ),
                     ],
                   ),
                 ),
-                const SizedBox(height: 35),
 
-                // সেফটি ফলব্যাক: এই ক্লাসের জন্য এখনো কোন কুইজ না খেললে ফাঁকা স্টেট দেখাবে
-                if (activePerformances.isEmpty)
-                  Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
-                    padding: const EdgeInsets.all(24),
-                    decoration: BoxDecoration(color: Colors.white.withOpacity(0.05), borderRadius: BorderRadius.circular(24)),
-                    child: Center(
-                      child: Text(
-                        "Radar Scan Empty for Class ${widget.student.selectedClass}! 🛰️\nPlay some dynamic quiz missions first to view analytics.",
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(color: Colors.white60, fontSize: 14, height: 1.4),
-                      ),
-                    ),
-                  ),
+                const SizedBox(height: 24),
 
-                // ১. ইমপ্রুভমেন্ট সেকশন (Weak Chapters Recommendation Box)
-                if (recommendedMissions.isNotEmpty) ...[
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24),
-                    child: Align(
-                      alignment: Alignment.centerLeft,
-                      child: Row(
-                        children: [
-                          const Text("🛠️ ", style: TextStyle(fontSize: 24)),
-                          Text(
-                            "Rocket Repair Missions",
-                            style: TextStyle(color: Colors.orangeAccent.shade200, fontSize: 22, fontWeight: FontWeight.w900),
-                          ),
-                        ],
-                      ),
-                    ),
+                // ════════════════════════════════════════
+                // 📊 CHAPTER PROGRESS
+                // ════════════════════════════════════════
+                Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 20),
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(22),
+                    boxShadow: [BoxShadow(
+                        color: Colors.black.withOpacity(0.05), blurRadius: 10)],
                   ),
-                  const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 24, vertical: 4),
-                    child: Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        "Your engine shield is dropping here! Re-play to boost fuel! 🔥",
-                        style: TextStyle(color: Colors.white60, fontSize: 13),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-
-                  ListView.builder(
-                    itemCount: recommendedMissions.length,
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemBuilder: (context, index) {
-                      final topic = recommendedMissions[index];
-                      return ScaleTransition(
-                        scale: Tween<double>(begin: 0.97, end: 1.0).animate(
-                          CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
-                        ),
-                        child: WeakTopicDashboardCard(
-                          topicName: "${topic["topic"]} (${topic["accuracy"].toStringAsFixed(0)}% Accuracy)",
-                          currentPoints: topic["points"],
-                          onPlayPressed: () {
-                            // কুইজ স্ক্রিন পুশ করে জেনারেট করা হচ্ছে
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => UnendingQuizScreen(
-                                  chapterName: topic["topic"],
-                                  classLevel: widget.student.selectedClass,
-                                ),
-                              ),
-                            ).then((value) {
-                              // 🚀 কুইজ স্ক্রিন পপ হয়ে ড্যাশবোর্ডে ব্যাক করার সাথে সাথে ডাটা রি-অ্যানালাইসিস ট্রিগার হবে!
-                              _loadAndAnalyzeData(); 
-                            });
-                          },
-                        ),
-                      );
-                    },
-                  ),
-                  const SizedBox(height: 25),
-                ],
-
-                // ২. স্ট্রং চ্যাপ্টার সেকশন (Mastered Deep Space Sectors)
-                if (strongMissions.isNotEmpty) ...[
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24),
-                    child: Align(
-                      alignment: Alignment.centerLeft,
-                      child: Row(
-                        children: [
-                          const Text("⭐ ", style: TextStyle(fontSize: 24)),
-                          Text(
-                            "Mastered Deep Space Sectors",
-                            style: TextStyle(color: Colors.greenAccent.shade200, fontSize: 22, fontWeight: FontWeight.w900),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 24, vertical: 4),
-                    child: Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        "Incredible calculations! You are running maximum power in these sectors! 🚀",
-                        style: TextStyle(color: Colors.white60, fontSize: 13),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-
-                  ListView.builder(
-                    itemCount: strongMissions.length,
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemBuilder: (context, index) {
-                      final topic = strongMissions[index];
-                      return Container(
-                        margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF16162A),
-                          borderRadius: BorderRadius.circular(18),
-                          border: Border.all(color: Colors.greenAccent.withOpacity(0.3), width: 1.5),
-                        ),
-                        child: Row(
-                          children: [
-                            const Text("✅", style: TextStyle(fontSize: 22)),
-                            const SizedBox(width: 14),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text("📊 Chapter Progress",
+                          style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF2F1B7A))),
+                      const SizedBox(height: 20),
+                      ...chapters.map((chapter) {
+                        double accuracy =
+                            (chapter['averageAccuracy'] as double) * 100;
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 18),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
-                                  Text(topic["topic"], style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
-                                  const SizedBox(height: 4),
-                                  Text("Accuracy: ${topic["accuracy"].toStringAsFixed(0)}% • Lvl ${topic["level"]}", style: const TextStyle(color: Colors.white60, fontSize: 12)),
+                                  Text(chapter['chapterName'],
+                                      style: const TextStyle(
+                                          fontWeight: FontWeight.bold)),
+                                  Text("${accuracy.toStringAsFixed(0)}%",
+                                      style: const TextStyle(
+                                          fontWeight: FontWeight.bold)),
                                 ],
                               ),
-                            ),
-                            Text("⭐ ${topic["points"]} XP", style: const TextStyle(color: Colors.greenAccent, fontWeight: FontWeight.bold)),
-                          ],
-                        ),
-                      );
-                    },
-                  ),
-                  const SizedBox(height: 24),
-                ],
-
-                // ৩. রাডার স্ক্যান প্রগ্রেস বার লিস্ট
-                if (activePerformances.isNotEmpty) ...[
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24),
-                    child: Align(
-                      alignment: Alignment.centerLeft,
-                      child: Row(
-                        children: const [
-                          Text("🛰️ ", style: TextStyle(fontSize: 24)),
-                          Text(
-                            "All Space Radar Scans",
-                            style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w900),
+                              const SizedBox(height: 8),
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(20),
+                                child: LinearProgressIndicator(
+                                  value: accuracy / 100,
+                                  minHeight: 14,
+                                  backgroundColor: Colors.grey.shade300,
+                                  valueColor: AlwaysStoppedAnimation(
+                                    accuracy >= 85
+                                        ? Colors.green
+                                        : accuracy >= 70
+                                            ? Colors.orange
+                                            : Colors.red,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
-                    ),
+                        );
+                      }).toList(),
+                    ],
                   ),
-                  const SizedBox(height: 12),
-                  ListView.builder(
-                    itemCount: activePerformances.length,
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemBuilder: (context, index) {
-                      final target = activePerformances[index];
-                      double percentageFactor = target["accuracy"] / 100.0;
-                      Color barColor = target["accuracy"] >= 75.0 ? Colors.greenAccent : (target["accuracy"] >= 45.0 ? Colors.orangeAccent : Colors.redAccent);
+                ),
 
-                      return Container(
-                        margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(color: const Color(0xFF16162A), borderRadius: BorderRadius.circular(18)),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
+                const SizedBox(height: 24),
+
+                // ════════════════════════════════════════
+                // ⚠️ WEAK TOPICS
+                // ════════════════════════════════════════
+                if (weakTopics.isNotEmpty)
+                  _buildSectionTitle("⚠️ Weak Topics", Colors.red),
+                ...weakTopics.map((item) {
+                  double accuracy = item['averageAccuracy'] * 100;
+                  return _buildTopicCard(
+                      context, item['chapterName'], accuracy,
+                      Colors.red, Icons.trending_down);
+                }),
+
+                // ════════════════════════════════════════
+                // 💪 STRONG TOPICS
+                // ════════════════════════════════════════
+                if (strongTopics.isNotEmpty)
+                  _buildSectionTitle("💪 Strong Topics", Colors.green),
+                ...strongTopics.map((item) {
+                  double accuracy = item['averageAccuracy'] * 100;
+                  return _buildTopicCard(
+                      context, item['chapterName'], accuracy,
+                      Colors.green, Icons.star);
+                }),
+
+                const SizedBox(height: 24),
+
+                // ════════════════════════════════════════
+                // 🧠 AI RECOMMENDATION
+                // ════════════════════════════════════════
+                Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 20),
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                        colors: [Color(0xFFFF9F43), Color(0xFFFF6B6B)]),
+                    borderRadius: BorderRadius.circular(22),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text("🧠 AI Coach Recommendation",
+                          style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 12),
+                      Text(aiMessage,
+                          style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600)),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 24),
+
+                // ════════════════════════════════════════
+                // 🌍 GLOBAL QUIZ STATS  ← NEW SECTION
+                // ════════════════════════════════════════
+                _buildSectionTitle("🌍 Global Quiz Performance", const Color(0xFF6C5CE7)),
+
+                StreamBuilder<Map<String, dynamic>>(
+                  stream: _watchGlobalQuizStats(),
+                  builder: (context, gSnap) {
+                    if (!gSnap.hasData || gSnap.data!.isEmpty) {
+                      // Not played yet — show invite card
+                      return _buildGlobalQuizInviteCard(context);
+                    }
+
+                    final g = gSnap.data!;
+                    final int gCorrect  = g['correctAnswers']  as int? ?? 0;
+                    final int gWrong    = g['wrongAnswers']    as int? ?? 0;
+                    final int gTotal    = gCorrect + gWrong;
+                    final double gAcc   = gTotal == 0 ? 0 : (gCorrect / gTotal) * 100;
+                    final int gScore    = g['score']           as int? ?? 0;
+                    final int gAnswered = g['totalAnswered']   as int? ?? 0;
+                    final int gStreak   = g['streak']          as int? ?? 0;
+                    final int gXp       = g['xp']              as int? ?? 0;
+
+                    // Derive weak/strong insight from chapter-level data
+                    // Global quiz doesn't track per-chapter, so we show overall
+                    // and compare against the per-chapter quiz to give advice.
+                    String globalInsight;
+                    if (gAcc >= 85) {
+                      globalInsight = "🏆 You're dominating the Global Quiz! Keep it up!";
+                    } else if (gAcc >= 65) {
+                      globalInsight = "📈 Good effort! Work on weak chapters to boost your score.";
+                    } else if (gAcc >= 40) {
+                      globalInsight = "💪 Keep practising! Focus on Class 3 & 4 basics.";
+                    } else {
+                      globalInsight = "🚨 Needs improvement. Try chapter quizzes first, then revisit.";
+                    }
+
+                    Color accColor = gAcc >= 85
+                        ? const Color(0xFF2ECC71)
+                        : gAcc >= 65
+                            ? const Color(0xFFFF9F43)
+                            : const Color(0xFFFF4757);
+
+                    return Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 20),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(24),
+                        boxShadow: [BoxShadow(
+                            color: Colors.black.withOpacity(0.06),
+                            blurRadius: 14,
+                            offset: const Offset(0, 4))],
+                      ),
+                      child: Column(children: [
+
+                        // ── Header gradient band ──────────────
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.fromLTRB(20, 18, 20, 18),
+                          decoration: const BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [Color(0xFF6C5CE7), Color(0xFF00CEC9)]),
+                            borderRadius: BorderRadius.vertical(
+                                top: Radius.circular(24)),
+                          ),
+                          child: Row(
+                            children: [
+                              const Text("🌍",
+                                  style: TextStyle(fontSize: 30)),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text("Global Quiz  (Class 3 & 4)",
+                                        style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 17,
+                                            fontWeight: FontWeight.w900)),
+                                    Text("Mixed chapter challenge",
+                                        style: TextStyle(
+                                            color: Colors.white.withOpacity(0.75),
+                                            fontSize: 12)),
+                                  ],
+                                ),
+                              ),
+                              // Big accuracy circle
+                              Container(
+                                width: 62,
+                                height: 62,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: Colors.white.withOpacity(0.15),
+                                  border: Border.all(
+                                      color: accColor, width: 3)),
+                                child: Center(
+                                  child: Text(
+                                    "${gAcc.toStringAsFixed(0)}%",
+                                    style: TextStyle(
+                                        color: accColor,
+                                        fontWeight: FontWeight.w900,
+                                        fontSize: 15),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        // ── Stats grid ───────────────────────
+                        Padding(
+                          padding: const EdgeInsets.all(18),
+                          child: Column(children: [
                             Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              mainAxisAlignment:
+                                  MainAxisAlignment.spaceAround,
                               children: [
-                                Text(target["topic"], style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
-                                Text("${target["accuracy"].toStringAsFixed(0)}% Accuracy", style: TextStyle(color: barColor, fontWeight: FontWeight.w900, fontSize: 13)),
+                                _buildGlobalStat("🎯", "$gAnswered", "Answered"),
+                                _buildGlobalStat("✅", "$gCorrect",  "Correct"),
+                                _buildGlobalStat("❌", "$gWrong",    "Wrong"),
+                                _buildGlobalStat("🔥", "$gStreak",   "Best Streak"),
                               ],
                             ),
-                            const SizedBox(height: 10),
-                            Stack(
+                            const SizedBox(height: 14),
+                            Row(
+                              mainAxisAlignment:
+                                  MainAxisAlignment.spaceAround,
                               children: [
-                                Container(height: 8, decoration: BoxDecoration(color: Colors.white12, borderRadius: BorderRadius.circular(6))),
-                                FractionallySizedBox(
-                                  widthFactor: percentageFactor.clamp(0.05, 1.0),
-                                  child: Container(height: 8, decoration: BoxDecoration(color: barColor, borderRadius: BorderRadius.circular(6))),
-                                )
+                                _buildGlobalStat("⭐", "$gScore",  "Score"),
+                                _buildGlobalStat("💎", "$gXp",    "XP Earned"),
+                                _buildGlobalStat("📊", "${gAcc.toStringAsFixed(0)}%", "Accuracy"),
+                                _buildGlobalStat("🏅",
+                                    gAcc >= 85 ? "Elite" : gAcc >= 65 ? "Rising" : "Rookie",
+                                    "Global Rank"),
                               ],
-                            )
-                          ],
+                            ),
+
+                            const SizedBox(height: 16),
+
+                            // ── Accuracy progress bar ────────
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    const Text("Overall Accuracy",
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.w700,
+                                            fontSize: 13,
+                                            color: Color(0xFF2F1B7A))),
+                                    Text(
+                                        gAcc >= 85
+                                            ? "🟢 Strong"
+                                            : gAcc >= 65
+                                                ? "🟡 Average"
+                                                : "🔴 Needs Work",
+                                        style: TextStyle(
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w700,
+                                            color: accColor)),
+                                  ],
+                                ),
+                                const SizedBox(height: 6),
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: LinearProgressIndicator(
+                                    value: gAcc / 100,
+                                    minHeight: 12,
+                                    backgroundColor: Colors.grey.shade200,
+                                    valueColor:
+                                        AlwaysStoppedAnimation(accColor),
+                                  ),
+                                ),
+                              ],
+                            ),
+
+                            const SizedBox(height: 16),
+
+                            // ── AI insight for global quiz ───
+                            Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.all(14),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF6C5CE7).withOpacity(0.07),
+                                borderRadius: BorderRadius.circular(14),
+                                border: Border.all(
+                                    color: const Color(0xFF6C5CE7)
+                                        .withOpacity(0.25))),
+                              child: Text(globalInsight,
+                                  style: const TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w700,
+                                      color: Color(0xFF4834D4),
+                                      height: 1.4)),
+                            ),
+
+                            const SizedBox(height: 16),
+
+                            // ── Cross-reference weak chapters ─
+                            if (weakTopics.isNotEmpty) ...[
+                              Container(
+                                width: double.infinity,
+                                padding: const EdgeInsets.all(14),
+                                decoration: BoxDecoration(
+                                  color: Colors.red.withOpacity(0.05),
+                                  borderRadius: BorderRadius.circular(14),
+                                  border: Border.all(
+                                      color: Colors.red.withOpacity(0.2))),
+                                child: Column(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.start,
+                                  children: [
+                                    const Text("📌 Chapters to focus on in Global Quiz:",
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.w800,
+                                            fontSize: 13,
+                                            color: Colors.red)),
+                                    const SizedBox(height: 8),
+                                    ...weakTopics.take(4).map((wt) {
+                                      double wtAcc =
+                                          (wt['averageAccuracy'] as double) *
+                                              100;
+                                      return Padding(
+                                        padding: const EdgeInsets.only(
+                                            bottom: 6),
+                                        child: Row(children: [
+                                          const Icon(
+                                              Icons.arrow_right_rounded,
+                                              size: 18,
+                                              color: Colors.red),
+                                          const SizedBox(width: 4),
+                                          Expanded(
+                                            child: Text(
+                                              wt['chapterName'],
+                                              style: const TextStyle(
+                                                  fontSize: 12,
+                                                  fontWeight:
+                                                      FontWeight.w600,
+                                                  color: Color(0xFF333333)),
+                                            ),
+                                          ),
+                                          Container(
+                                            padding:
+                                                const EdgeInsets.symmetric(
+                                                    horizontal: 8,
+                                                    vertical: 3),
+                                            decoration: BoxDecoration(
+                                              color: Colors.red
+                                                  .withOpacity(0.1),
+                                              borderRadius:
+                                                  BorderRadius.circular(8)),
+                                            child: Text(
+                                              "${wtAcc.toStringAsFixed(0)}%",
+                                              style: const TextStyle(
+                                                  fontSize: 11,
+                                                  fontWeight: FontWeight.w800,
+                                                  color: Colors.red),
+                                            ),
+                                          ),
+                                        ]),
+                                      );
+                                    }).toList(),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(height: 14),
+                            ],
+
+                            // ── Play Again button ─────────────
+                            SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton.icon(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFF6C5CE7),
+                                  foregroundColor: Colors.white,
+                                  minimumSize: const Size(double.infinity, 52),
+                                  shape: RoundedRectangleBorder(
+                                      borderRadius:
+                                          BorderRadius.circular(16)),
+                                  elevation: 4,
+                                ),
+                                onPressed: () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (_) =>
+                                          const GlobalQuizScreen()),
+                                ),
+                                icon: const Icon(Icons.play_arrow_rounded,
+                                    size: 22),
+                                label: const Text("Play Global Quiz Again 🌍",
+                                    style: TextStyle(
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.w800)),
+                              ),
+                            ),
+                          ]),
                         ),
-                      );
-                    },
-                  ),
-                ],
-                const SizedBox(height: 30),
+                      ]),
+                    );
+                  },
+                ),
+
+                const SizedBox(height: 24),
+
+               
+                const SizedBox(height: 40),
               ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  // ════════════════════════════════════════════════════════════════
+  //  Global Quiz — invite card (first-time player)
+  // ════════════════════════════════════════════════════════════════
+  Widget _buildGlobalQuizInviteCard(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 20),
+      padding: const EdgeInsets.all(22),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+            colors: [Color(0xFF6C5CE7), Color(0xFF00CEC9)]),
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [BoxShadow(
+            color: const Color(0xFF6C5CE7).withOpacity(0.3),
+            blurRadius: 16,
+            offset: const Offset(0, 6))],
+      ),
+      child: Column(children: [
+        const Text("🌍", style: TextStyle(fontSize: 48)),
+        const SizedBox(height: 10),
+        const Text("You haven't tried the\nGlobal Quiz yet!",
+            textAlign: TextAlign.center,
+            style: TextStyle(
+                color: Colors.white,
+                fontSize: 18,
+                fontWeight: FontWeight.w900,
+                height: 1.4)),
+        const SizedBox(height: 8),
+        const Text(
+            "A mixed challenge with questions from ALL Class 3 & 4 chapters. "
+            "Test yourself across every topic and see where you stand!",
+            textAlign: TextAlign.center,
+            style: TextStyle(
+                color: Colors.white70, fontSize: 13, height: 1.5)),
+        const SizedBox(height: 18),
+        // Feature chips
+        Wrap(
+          alignment: WrapAlignment.center,
+          spacing: 8,
+          runSpacing: 6,
+          children: [
+            _featureChip("⏱ Adaptive Timer"),
+            _featureChip("🔀 Mixed Topics"),
+            _featureChip("🔥 Streak Bonus"),
+            _featureChip("💎 XP Rewards"),
+          ],
+        ),
+        const SizedBox(height: 18),
+        ElevatedButton.icon(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.white,
+            foregroundColor: const Color(0xFF6C5CE7),
+            minimumSize: const Size(double.infinity, 52),
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16)),
+            elevation: 0,
+          ),
+          onPressed: () => Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (_) => const GlobalQuizScreen()),
+          ),
+          icon: const Icon(Icons.play_arrow_rounded, size: 22),
+          label: const Text("Start Global Quiz 🚀",
+              style: TextStyle(
+                  fontSize: 15, fontWeight: FontWeight.w900)),
+        ),
+      ]),
+    );
+  }
+
+  Widget _featureChip(String label) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.18),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white30)),
+      child: Text(label,
+          style: const TextStyle(
+              color: Colors.white, fontSize: 11, fontWeight: FontWeight.w700)),
+    );
+  }
+
+  // ════════════════════════════════════════════════════════════════
+  //  Global quiz mini-stat cell
+  // ════════════════════════════════════════════════════════════════
+  Widget _buildGlobalStat(String emoji, String value, String label) {
+    return Column(children: [
+      Text(emoji, style: const TextStyle(fontSize: 20)),
+      const SizedBox(height: 4),
+      Text(value,
+          style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w900,
+              color: Color(0xFF2F1B7A))),
+      Text(label,
+          style: const TextStyle(fontSize: 10, color: Colors.black45)),
+    ]);
+  }
+
+  // ════════════════════════════════════════════════════════════════
+  //  Existing helpers (unchanged)
+  // ════════════════════════════════════════════════════════════════
+  Widget _buildStatItem(String emoji, String value, String label) {
+    return Column(children: [
+      Text(emoji, style: const TextStyle(fontSize: 24)),
+      const SizedBox(height: 6),
+      Text(value,
+          style: const TextStyle(
+              color: Colors.white,
+              fontSize: 18,
+              fontWeight: FontWeight.bold)),
+      Text(label,
+          style: const TextStyle(color: Colors.white70, fontSize: 12)),
+    ]);
+  }
+
+  Widget _buildMiniCard(String title, String value) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.15),
+        borderRadius: BorderRadius.circular(16)),
+      child: Column(children: [
+        Text(title, style: const TextStyle(color: Colors.white70)),
+        const SizedBox(height: 4),
+        Text(value,
+            style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 16)),
+      ]),
+    );
+  }
+
+  Widget _buildSectionTitle(String title, Color color) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+      child: Text(title,
+          style: TextStyle(
+              color: color, fontSize: 20, fontWeight: FontWeight.bold)),
+    );
+  }
+
+  Widget _buildTopicCard(BuildContext context, String chapter, double accuracy,
+      Color color, IconData icon) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
+      child: Card(
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(18)),
+        child: ListTile(
+          leading: CircleAvatar(
+            backgroundColor: color,
+            child: Icon(icon, color: Colors.white)),
+          title: Text(chapter),
+          subtitle: Text(
+              "Accuracy ${accuracy.toStringAsFixed(0)}%"),
+          trailing: const Icon(Icons.arrow_forward_ios),
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => UnendingQuizScreen(
+                chapterName: chapter,
+                classLevel: student.selectedClass,
+              ),
             ),
           ),
         ),
